@@ -29,6 +29,7 @@ __all__ = [
 def plt_mono_pt(
     coll = None,
     key_diag = None,
+    cry_shape = 'Spherical',
     lamb0 = None,
     dout = None,
     dpt = None,
@@ -36,7 +37,7 @@ def plt_mono_pt(
 
     # Gets default values
     if dpt is None:
-        dpt = dp.get_dpt(option='default')
+        dpt = dp.get_dpt(option=cry_shape)
 
     # Init
     dxi = dout['XICSRT']

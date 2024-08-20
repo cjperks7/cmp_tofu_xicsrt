@@ -158,15 +158,15 @@ def _init_config(
         # Object size
         config['optics']['crystal']['xsize'] = (
             2*dgeom_cryst['extenthalf'][0]
-            *dgeom_cryst['curve_r'][0]
-            ) # [m], Horizontal
+            #*dgeom_cryst['curve_r'][0]
+            ) # [m], Horizontal size
         config['optics']['crystal']['ysize'] = (
             2*dgeom_cryst['extenthalf'][1]
-            #*dgeom_cryst['curve_r'][1]
-            ) # [m], Vertical
+            *dgeom_cryst['curve_r'][1]
+            ) # [m], Vertical size
 
         # Object radius
-        config['optics']['crystal']['radius'] = dgeom_cryst['curve_r'][0] # [m]
+        config['optics']['crystal']['radius'] = dgeom_cryst['curve_r'][1] # [m]
 
     # Error check
     else:

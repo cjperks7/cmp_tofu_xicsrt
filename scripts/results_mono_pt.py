@@ -21,6 +21,8 @@ import os
 
 # Wavelength
 lamb0 = 1.61 # [AA]
+#cry_shape = 'Spherical'
+cry_shape = 'Cylindrical'
 
 # Save controls
 dsave = {
@@ -45,7 +47,7 @@ dout, coll = utils.main(
         #'valid_spherical_128x64.npz'
         'valid_cylindrical_128x64.npz'
         ),
-    cry_shape = 'Cylindrical',
+    cry_shape = cry_shape,
     # Monochromatic, point source controls
     pt_run = True,
     dpt = None,
@@ -53,26 +55,18 @@ dout, coll = utils.main(
     run_tofu =True,
     run_xicsrt = True,
     dsave = dsave,
+    niter = 5,
     )
+
+
 
 # Plots results
 plotting.plt_mono_pt(
     coll = coll,
     key_diag = 'valid',
+    cry_shape = cry_shape,
     lamb0 = lamb0,
     dout = dout,
     dpt = None,
-    )
-
-
-from cmp_tofu_xicsrt.setup import _build_xicsrt as bx
-
-config = bx._init_config(
-    coll=coll,
-    key_diag = 'valid',
-    key_cam = 'cam',
-    cry_shape = 'Cylindrical',
-    #cry_shape = 'Spherical',
-    niter = 5
     )
 

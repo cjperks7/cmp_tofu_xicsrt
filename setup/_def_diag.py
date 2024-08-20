@@ -40,22 +40,35 @@ def get_dap(option=None):
 # Crystal geometry defaults
 def get_cry_dgeom(option=None):
 
+    # Crystal flattened dimensions
+    xsize = 0.034 # [m], horizontal total length
+    ysize = 0.012 # [m], vertical total length
+    radius = 0.4
+
+    # Crystal center coordinate
+    cent = np.r_[ 1.85000000e+01, -2.24092473e+00,  1.80000000e-02] # [m]
+
+    # Crystal axis basis
+    nin = np.r_[-0.26820408,  0.96336212,  0.        ] # normal axis
+    e0 = np.r_[0.96336212, 0.26820408, 0. ] # horizontal axis
+    e1 = np.r_[ 0.,  0., -1.] # vertical axis
+
     dgeom = {
         'Spherical':{
-            'cent': np.r_[ 1.85000000e+01, -2.24092473e+00,  1.80000000e-02],
-            'nin': np.r_[-0.26820408,  0.96336212,  0.        ],
-            'e0': np.r_[0.96336212, 0.26820408, 0. ],
-            'e1': np.r_[ 0.,  0., -1.],
-            'extenthalf': np.r_[0.04256678, 0.01489837],
-            'curve_r': np.r_[0.4, 0.4],
+            'cent': cent,
+            'nin': nin,
+            'e0': e0,
+            'e1': e1,
+            'extenthalf': np.r_[xsize/2/radius, ysize/2/radius], # [rad, rad]
+            'curve_r': np.r_[radius, radius], # [m]
             },
         'Cylindrical':{
-            'cent': np.r_[ 1.85000000e+01, -2.24092473e+00,  1.80000000e-02],
-            'nin': np.r_[-0.26820408,  0.96336212,  0.        ],
-            'e0': np.r_[0.96336212, 0.26820408, 0. ],
-            'e1': np.r_[ 0.,  0., -1.],
-            'extenthalf': np.r_[0.04256678, 0.01489837],
-            'curve_r': np.r_[0.4,np.inf],#np.r_[np.inf, 0.4],
+            'cent': cent,
+            'nin': nin,
+            'e0': e0,
+            'e1': e1,
+            'extenthalf': np.r_[xsize/2, ysize/2/radius], # [m, rad]
+            'curve_r': np.r_[np.inf, radius], # radius of curvature in plane (e0, e1) & nin --> thus cylinder axis (e0,e1)\cross nin
             },
         }
 

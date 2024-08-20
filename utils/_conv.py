@@ -12,7 +12,8 @@ import numpy as np
 
 __all__ = [
     '_tofu2xicsrt',
-    '_xicsrt2tofu'
+    '_xicsrt2tofu',
+    '_get_tofu_los'
     ]
 
 
@@ -70,3 +71,53 @@ def _xicsrt2tofu(
             data[:,0],
             data[:,1]
             )).T
+
+##################################################
+#
+#               Other
+#
+##################################################
+
+# Function to get LOS-per-wavelength from ToFu
+def _get_tofu_los(
+    coll = None,
+    key_diag = None,
+    key_cam = None,
+    lamb0 = None,
+    R0 = 1.85,      # [m], magnetic axis
+    ):
+
+    # Gets wavelength mesh
+    lamb, refs = coll.get_diagnostic_lamb(
+        key_diag,
+        key_cam=key_cam,
+        lamb='lamb',
+        ) # dim(nx, ny)
+
+    # Finds indices of interest
+    indy = int(lamb.shape[1]/2-1) # Takes midline
+    indx = np.argmin(abs(lamb0*1e-10 - lamb[:,indy]))
+
+    # Gets LOS vector data
+    vx, vy, vz = coll.get_rays_vect(key_diag)
+    vect = np.r_[vx[-1,indx,indy], vy[-1,indx,indy], vz[-1,indx,indy]]
+
+    # Gets LOS point data
+    ptsx, ptsy, ptsz = coll.get_rays_pts(key_diag)
+    p0 = np.r_[ptsx[-1,indx,indy], ptsy[-1,indx,indy], ptsz[-1,indx,indy]] # Inboard wall
+
+    # Finds when LOS is closest to magnetic axis
+    tt = np.linspace(0,2,501) # [m]
+    ps = p0[None,:] - tt[:,None]*vect[None,:] # dim(npt, 3)
+    rs = np.sqrt(ps[:,0]**2 + ps[:,1]**2) # dim(npt,)
+
+    indr = np.argmin(abs(rs-R0))
+
+    # Output
+    return {
+        'los_vect': vect,
+        'los_p0': p0,
+        'mag_axis': p0 - tt[indr]*vect
+        }
+    
+    

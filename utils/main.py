@@ -77,6 +77,7 @@ def main(
             key_diag = key_diag,
             key_cam = key_cam,
             config = config,
+            cry_shape = cry_shape,
             dpt = dpt,
             lamb0 = lamb0,
             run_xicsrt=run_xicsrt,

@@ -24,7 +24,7 @@ def get_dpt(
 
     # Options
     dpt = {
-        'default': {
+        'Spherical': {
             'ToFu':{
                 'point': np.r_[1.8, 0.18, 0.0],
                 'n0': 2001,#10001,
@@ -38,7 +38,25 @@ def get_dpt(
             'plotting':{
                 'xind': 44,
                 }
-            }
+            },
+        'Cylindrical': {
+            'ToFu':{
+                'point': np.r_[1.84347549, 0.15654151, 0.018],
+                'n0': 2001,#10001,
+                'n1': 2001,#10001,
+                'plt': False,
+                },
+            'XICSRT':{
+                'intensity': 1e6,
+                'dOmega': [
+                    0.001, 
+                    0.0002
+                    ] # [rad]
+                },
+            'plotting':{
+                'xind': None,
+                }
+            },
         }
 
     # Output

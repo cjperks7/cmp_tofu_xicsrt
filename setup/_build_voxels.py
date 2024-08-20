@@ -235,6 +235,7 @@ def _build_omegas(
 def _build_boxes(
     coll = None,
     key_diag = None,
+    key_cam  = None,
     lamb0 = None, # [AA]
     # Controls
     dvol = None, 
@@ -253,9 +254,6 @@ def _build_boxes(
         dvol = dv.get_dovl(option='default')
 
     # ToFu VOS data
-    doptics = coll.dobj['diagnostic'][key_diag]['doptics']
-    key_cam = list(doptics.keys())[0]
-
     xxs = coll.ddata[key_diag+'_'+key_cam+'_vos_ph0']['data']
     yys = coll.ddata[key_diag+'_'+key_cam+'_vos_ph1']['data']
 

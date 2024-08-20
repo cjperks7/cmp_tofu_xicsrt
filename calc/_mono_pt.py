@@ -31,6 +31,7 @@ def run_mono_pt(
     coll = None,
     key_diag = None,
     key_cam = None,
+    cry_shape = None,
     # Controls
     dpt = None,
     lamb0 = None, # [AA]
@@ -56,7 +57,7 @@ def run_mono_pt(
 
     # Gets default values
     if dpt is None:
-        dpt = dp.get_dpt(option='default')
+        dpt = dp.get_dpt(option=cry_shape)
 
     # Makes the point source
     if dpt['ToFu']['point'] is None:
@@ -155,8 +156,10 @@ def _run_mono_pt_xicsrt(
     #pt = np.r_[0.18,0,1.8]
 
     # Defines normal axis of point source toward crystal center
-    vpt = config['optics']['crystal']['origin'] - pt
+    #vpt = config['optics']['crystal']['origin'] - pt
+    vpt = config['optics']['ap']['origin'] - pt
     vpt /= np.linalg.norm(vpt)
+    #print(vpt)
 
     # Init
     config['sources'] = {}
@@ -182,7 +185,6 @@ def _run_mono_pt_xicsrt(
     config['sources']['source']['angular_dist'] = 'isotropic_xy' # Horizontal & Vertical extent
     config['sources']['source']['spread'] = dpt['XICSRT']['dOmega'] # [rad], (x,y), half-angles
 
-    print(config)
     # Runs ray-tracing
     results = xicsrt.raytrace(config)
     #dxicsrt['pt']['XICSRT'] = results['found']['history']['detector']
@@ -192,6 +194,7 @@ def _run_mono_pt_xicsrt(
     if pt_plt:
         import xicsrt.visual.xicsrt_2d__matplotlib as xicsrt_2d
         xicsrt_2d.plot_intersect(results, 'ap')
+        xicsrt_2d.plot_intersect(results, 'crystal')
         xicsrt_2d.plot_intersect(results, 'detector')
 
     # Calculates histogram
