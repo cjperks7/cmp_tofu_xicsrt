@@ -121,6 +121,8 @@ def _run_multi_vol_xicsrt(
             dout = dout,
             fE = fE[ii],
             dlamb = lamb[1]-lamb[0],
+            nlamb = len(lamb),
+            ilamb = ii,
             )
 
     # Stores detector configuration
@@ -130,6 +132,7 @@ def _run_multi_vol_xicsrt(
         key_cam = key_cam,
         dout = dout
         )
+    dout['lambda_AA'] = lamb # dim(nlamb,)
 
     # Output
     return dout
@@ -273,6 +276,8 @@ def _calc_signal(
     dout = None,
     fE = None,
     dlamb = None,
+    nlamb = None,
+    ilamb = None,
     nx = 512,
     ny = 256,
     ):
@@ -288,6 +293,11 @@ def _calc_signal(
     # Init
     if 'signal' not in list(dout.keys()):
         dout['signal'] = np.zeros((nx,ny))
+    if 'dispersion' not in list(dout.keys()):
+        dout['dispersion'] = np.zeros((nx,ny,nlamb))
+
+    # Stores dispersion histogram
+    dout['dispersion'][:,:,ilamb] += dhist['counts'] 
 
     # wavelength-integration (via left-hand Riemann sum)
     dout['signal'] += (

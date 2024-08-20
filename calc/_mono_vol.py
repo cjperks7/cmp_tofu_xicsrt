@@ -106,6 +106,7 @@ def _run_mono_vol_xicsrt(
     box_cent, box_dl, box_vect = setup._build_boxes(
         coll = coll,
         key_diag = key_diag,
+        key_cam = key_cam,
         lamb0 = lamb0,
         dvol = dvol
         )
@@ -370,9 +371,9 @@ def _loop_volumes_HPC(
             results['found']['history']['source']['direction'],
             dout['source']['direction']
             ))
-        dxicsrt['crystal']['direction'] = np.vstack((
+        dout['crystal']['direction'] = np.vstack((
             results['found']['history']['crystal']['direction'],
-            dxicsrt['crystal']['direction']
+            dout['crystal']['direction']
             ))
 
     # Stores voxel data

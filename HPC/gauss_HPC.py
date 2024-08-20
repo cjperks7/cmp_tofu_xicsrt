@@ -17,6 +17,11 @@ import cmp_tofu_xicsrt.utils as utils
 
 start_time = time.time()
 
+# Wavelength
+lamb0 = 1.61 # [AA]
+#cry_shape = 'Spherical'
+cry_shape = 'Cylindrical'
+
 # HPC controls
 dHPC = {
     'job_axis': ['vert' ,'binorm'],
@@ -61,9 +66,14 @@ elif sys.argv[3] == 'xicsrt':
 
 # Loads collection object
 dout, coll, config = utils.main(
-    lamb0 = 1.61, # [AA]
-    coll_tf='./CodeValidation_valid_hires.npz',
-    #coll_tf='./CodeValidation_valid_subcam161.npz',
+    lamb0 = lamb0, # [AA]
+    coll_tf=os.path.join(
+        '/home/cjperks',
+        'cmp_tofu_xicsrt/diags',
+        #'valid_spherical_128x64.npz'
+        'valid_cylindrical_128x64.npz'
+        ),
+    cry_shape = cry_shape,
     # Multi-energy, volumetric source controls
     me_run = True,
     dvol = None,

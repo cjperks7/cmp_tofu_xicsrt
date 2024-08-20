@@ -7,8 +7,8 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem-per-cpu=20G
 #SBATCH -p sched_mit_psfc_r8
-#SBATCH --output=output/mv_v2/slurm_%a.out
-#SBATCH --error=output/mv_v2/slurm_%a.err
+#SBATCH --output=output/cyl_mv_v2/slurm_%a.out
+#SBATCH --error=output/cyl_mv_v2/slurm_%a.err
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=cjperks@mit.edu
 
@@ -17,4 +17,4 @@ module purge
 . $HOME/bin/init_R8_py310.sh
 
 # Your job script here
-python delta_HPC.py $SLURM_ARRAY_TASK_ID mv_v2 xicsrt
+python delta_HPC.py $SLURM_ARRAY_TASK_ID cyl_mv_v2 xicsrt
