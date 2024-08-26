@@ -35,7 +35,7 @@ def _init_diag(
 
     # If user is reloading a Collection object
     if isinstance(coll, str):
-        return tf.data.load(coll)
+        coll = tf.data.load(coll)
 
     # Else, build a new diagnostic
     else:
@@ -123,7 +123,7 @@ def _build_diag(
         key = 'valid',
         doptics = {'cam': ['cry', 'ap']},
         compute = True, # compute LOS
-        compute_vos_from_los = False,
+        compute_vos_from_los = True,
         convex = True,
         config = tf.load_config('SPARC-V0')
         )

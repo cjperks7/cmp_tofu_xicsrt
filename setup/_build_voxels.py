@@ -251,14 +251,14 @@ def _build_boxes(
 
     # Defaults
     if dvol is None:
-        dvol = dv.get_dovl(option='default')
+        dvol = dv.get_dvol(option='default')
 
     # ToFu VOS data
-    xxs = coll.ddata[key_diag+'_'+key_cam+'_vos_ph0']['data']
-    yys = coll.ddata[key_diag+'_'+key_cam+'_vos_ph1']['data']
+    #xxs = coll.ddata[key_diag+'_'+key_cam+'_vos_ph0']['data']
+    #yys = coll.ddata[key_diag+'_'+key_cam+'_vos_ph1']['data']
 
-    rrs = coll.ddata[key_diag+'_'+key_cam+'_vos_pc0']['data']
-    zzs = coll.ddata[key_diag+'_'+key_cam+'_vos_pc1']['data']
+    #rrs = coll.ddata[key_diag+'_'+key_cam+'_vos_pc0']['data']
+    #zzs = coll.ddata[key_diag+'_'+key_cam+'_vos_pc1']['data']
 
     lamb, refs = coll.get_diagnostic_lamb(
         key_diag,
@@ -270,12 +270,12 @@ def _build_boxes(
     ptsx, ptsy, ptsz = coll.get_rays_pts(key_diag)
 
     # Prepares ToFu VOS data for the wavelength of interest
-    inds_v = np.nan*np.zeros(xxs.shape[2]) # dim(nvert,)
+    inds_v = np.nan*np.zeros(ptsx.shape[2]) # dim(nvert,)
 
-    xx0 = np.nan*np.zeros((xxs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
-    yy0 = np.nan*np.zeros((xxs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
-    zz0 = np.nan*np.zeros((zzs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
-    rr0 = np.nan*np.zeros((zzs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
+    #xx0 = np.nan*np.zeros((xxs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
+    #yy0 = np.nan*np.zeros((xxs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
+    #zz0 = np.nan*np.zeros((zzs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
+    #rr0 = np.nan*np.zeros((zzs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
 
     losx = np.nan*np.zeros((2, ptsx.shape[2])) # dim(nseg, nvert)
     losy = np.nan*np.zeros((2, ptsx.shape[2])) # dim(nseg, nvert)
@@ -286,17 +286,17 @@ def _build_boxes(
     vlosy = np.nan*np.zeros(vy.shape[2]) # dim(nvert)
     vlosz = np.nan*np.zeros(vz.shape[2]) # dim(nvert)
 
-    for vv in np.arange(xxs.shape[2]):
+    for vv in np.arange(ptsx.shape[2]):
         if np.isnan(np.mean(lamb[:,vv])):
             continue
         
         else:
             inds_v[vv] = np.argmin(abs(lamb0*1e-10 - lamb[:,vv]))
 
-            xx0[:,vv] = xxs[:,int(inds_v[vv]), vv]
-            yy0[:,vv] = yys[:,int(inds_v[vv]), vv]
-            zz0[:,vv] = zzs[:,int(inds_v[vv]), vv]
-            rr0[:,vv] = rrs[:,int(inds_v[vv]), vv]
+            #xx0[:,vv] = xxs[:,int(inds_v[vv]), vv]
+            #yy0[:,vv] = yys[:,int(inds_v[vv]), vv]
+            #zz0[:,vv] = zzs[:,int(inds_v[vv]), vv]
+            #rr0[:,vv] = rrs[:,int(inds_v[vv]), vv]
 
             losx[0,vv] = ptsx[2,int(inds_v[vv]), vv]
             losx[1,vv] = ptsx[1,int(inds_v[vv]), vv]
@@ -314,10 +314,10 @@ def _build_boxes(
 
 
     # VOS radial bounds
-    rbnd = np.r_[
-        np.nanmax(rr0.flatten()),
-        np.nanmin(rr0.flatten())
-        ]
+    #rbnd = np.r_[
+    #    np.nanmax(rr0.flatten()),
+    #    np.nanmin(rr0.flatten())
+    #    ]
 
     # Midplane LOS vector
     mid_i = int(len(vlosx)/2-1)

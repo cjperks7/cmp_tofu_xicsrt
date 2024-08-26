@@ -18,7 +18,8 @@ import cmp_tofu_xicsrt.setup as setup
 
 __all__ = [
     'main',
-    '_save'
+    '_save',
+    '_get_mv_results'
     ]
 
 ###################################################
@@ -152,3 +153,58 @@ def _save(
 
     # Saves XICSRT results
     np.savez(name,dout)
+
+# Organizes HPC output for mono-energetic, volumetric case
+def _get_mv_results(
+    folder = None,
+    folder_xi = None,
+    folder_tf = None,
+    name = None,
+    ):
+    from cmp_tofu_xicsrt.utils import _conv as cv
+
+    # Gets list of output files
+    xi_fils = [f for f in os.listdir(folder+'/'+folder_xi) if f.startswith(name)] 
+
+    # Init
+    dxi = {}
+    optics = ['source', 'crystal', 'detector']
+
+    # Loads XICSRT data
+    for xi in xi_fils:
+        print(xi)
+        key = xi.split('job')[-1].split('.')[0]
+        dxi[key] = np.load(
+            os.path.join(folder,folder_xi,xi),
+            allow_pickle=True
+            )['arr_0'][()]['XICSRT']
+
+        for op in optics:
+            for kk in dxi[key][op].keys():
+                dxi[key][op][kk] = cv._xicsrt2tofu(
+                    data=dxi[key][op][kk]
+                    )
+
+        # Adds together signal data
+        if 'signal' not in dxi.keys():
+            dxi['signal'] = np.zeros(dxi[key]['signal'].shape)
+            dxi['voxels'] = dxi[key]['voxels']
+            dxi['extent'] = dxi[key]['extent']
+            dxi['aspect'] = dxi[key]['aspect']
+            dxi['cents_cm'] = dxi[key]['cents_cm']
+            dxi['npix'] = dxi[key]['npix']
+        dxi['signal'] += dxi[key]['signal']
+
+    # Loads ToFu data
+    tf_fils = [f for f in os.listdir(folder+'/'+folder_tf) if f.startswith(name)] 
+    print(tf_fils)
+    dtf = np.load(
+        os.path.join(folder,folder_tf,tf_fils[0]), 
+        allow_pickle=True
+        )['arr_0'][()]['ToFu']
+
+    # Output
+    return {
+        'XICSRT': dxi,
+        'ToFu': dtf
+        }

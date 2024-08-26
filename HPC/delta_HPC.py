@@ -38,7 +38,7 @@ dsave = {
     'path': os.path.join(
         '/home/cjperks',
         'cmp_tofu_xicsrt',
-        'output',
+        'HPC/output',
         sys.argv[2]
         ),
     'name': 'delta_cyl'
@@ -67,12 +67,12 @@ elif sys.argv[3] == 'xicsrt':
 # Loads collection object
 dout, coll = utils.main(
     lamb0 = lamb0, # [AA]
-    coll_tf=os.path.join(
-        '/home/cjperks',
-        'cmp_tofu_xicsrt/diags',
-        #'valid_spherical_128x64.npz'
-        'valid_cylindrical_128x64.npz'
-        ),
+    #coll_tf=os.path.join(
+    #    '/home/cjperks',
+    #    'cmp_tofu_xicsrt/diags',
+    #    #'valid_spherical_128x64.npz'
+    #    'valid_cylindrical_128x64.npz'
+    #    ),
     cry_shape = cry_shape,
     # Monochromatic, volumetric source controls
     vol_run = True,

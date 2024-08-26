@@ -168,7 +168,7 @@ def _run_mono_vol_tofu(
         res_RZ=[0.01, 0.01],         # 0.005 would be better
         res_phi=0.0005,        # 0.0002 would be better
         # res_lamb=0.001e-10,
-        lamb=coll.ddata['mlamb_bs1_ap']['data'],
+        #lamb=coll.ddata['mlamb_bs1_ap']['data'],
         #n0=501,
         #n1=201,
         n0=301,
@@ -226,7 +226,6 @@ def _run_mono_vol_tofu(
         key_diag = key_diag,
         key_cam = key_cam,
         dout = dout,
-        case = 'mv',
         )
     
     # Output
@@ -405,7 +404,7 @@ def _loop_volumes_HPC(
             ) # dim(nx,ny), [photons/bin^2]
 
     # Output
-    return dxicsrt
+    return dout
 
 def _gcd(a, b):
     while b:

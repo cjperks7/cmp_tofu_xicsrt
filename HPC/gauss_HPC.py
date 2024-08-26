@@ -38,7 +38,7 @@ dsave = {
     'path': os.path.join(
         '/home/cjperks',
         'cmp_tofu_xicsrt,
-        'output',
+        'HPC/output',
         sys.argv[2]
         ),
     'name': 'gauss_cyl'
