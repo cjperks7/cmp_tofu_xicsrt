@@ -60,6 +60,37 @@ dout, coll = utils.main(
 
 
 
+'''
+import cmp_tofu_xicsrt.plotting as plotting
+import tofu as tf
+import os
+
+coll = tf.data.load(
+    os.path.join(
+        '/home/cjperks',
+        'cmp_tofu_xicsrt/diags',
+        #'valid_spherical_128x64.npz'
+        'valid_cylindrical_128x64_v2.npz'
+        )
+    )
+dout = np.load(
+    os.path.join(
+        '/home/cjperks',
+        'cmp_tofu_xicsrt/output',
+        'cyl_pt_v1',
+        'pt_cyl_lamb1.61000AA.npz'
+        ),
+    allow_pickle=True
+    )['arr_0'][()]
+
+cry_shape = 'Cylindrical'
+lamb0 = 1.61
+
+'''
+
+
+
+
 # Plots results
 plotting.plt_mono_pt(
     coll = coll,

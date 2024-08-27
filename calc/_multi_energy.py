@@ -165,12 +165,12 @@ def _run_multi_vol_tofu(
         )
 
     # Adds data to collection object
-    coll.add_mesh_1d(
-        key='mlamb',
-        knots=lamb*1e-10,
-        deg=1,
-        units='m',
-        )
+    #coll.add_mesh_1d(
+    #    key='mlamb',
+    #    knots=lamb*1e-10,
+    #    deg=1,
+    #    units='m',
+    #    )
 
     eunit = 'ph/s/m3/sr/m'
     coll.add_data(
@@ -240,7 +240,7 @@ def _run_multi_vol_tofu(
 def _build_lamb(
     lamb0 = None, # [AA], centroid
     slamb = 5e-3, # [AA], std
-    nlamb = 3, # num grid points
+    nlamb = 61, # num grid points
     xlamb = 3.2, # num of std's
     ):
 

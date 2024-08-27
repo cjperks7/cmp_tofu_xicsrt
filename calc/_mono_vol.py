@@ -168,7 +168,7 @@ def _run_mono_vol_tofu(
         res_RZ=[0.01, 0.01],         # 0.005 would be better
         res_phi=0.0005,        # 0.0002 would be better
         # res_lamb=0.001e-10,
-        #lamb=coll.ddata['mlamb_bs1_ap']['data'],
+        lamb=coll.ddata['mlamb_bs1_ap']['data'],
         #n0=501,
         #n1=201,
         n0=301,
@@ -186,6 +186,7 @@ def _run_mono_vol_tofu(
 
     # Saves data
     dout['signal'] = sig/(4*np.pi)*1e6 # dim(nx,ny), [cm^3]
+    dout['dvos'] = dvos[key_cam]
 
     #coll.plot_diagnostic_vos(dvos=dvos)
 
