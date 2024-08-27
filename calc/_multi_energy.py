@@ -239,7 +239,7 @@ def _run_multi_vol_tofu(
 # Builds wavelength mesh
 def _build_lamb(
     lamb0 = None, # [AA], centroid
-    slamb = 5e-3, # [AA], std
+    slamb = 5e-4, # [AA], std
     nlamb = 61, # num grid points
     xlamb = 3.2, # num of std's
     ):
