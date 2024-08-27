@@ -71,7 +71,7 @@ dout, coll, config = utils.main(
         '/home/cjperks',
         'cmp_tofu_xicsrt/diags',
         #'valid_spherical_128x64.npz'
-        'valid_cylindrical_128x64.npz'
+        'valid_cylindrical_128x64_v2.npz'
         ),
     cry_shape = cry_shape,
     # Multi-energy, volumetric source controls
