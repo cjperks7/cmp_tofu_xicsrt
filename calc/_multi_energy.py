@@ -96,6 +96,9 @@ def _run_multi_vol_xicsrt(
     lamb0 = None
     ):
 
+    # Init
+    dout = {}
+
     # Builds wavelength mesh
     lamb, fE = _build_lamb(lamb0=lamb0)
 
@@ -118,6 +121,7 @@ def _run_multi_vol_xicsrt(
         dout = _calc_signal(
             rays = tmp['detector']['origin'],
             voxels = tmp['voxels'],
+            config = config,
             dout = dout,
             fE = fE[ii],
             dlamb = lamb[1]-lamb[0],
@@ -142,7 +146,6 @@ def _run_multi_vol_tofu(
     coll = None,
     key_diag = None,
     key_cam = None,
-    dout = None,
     lamb0 = None,
     ):
 
@@ -217,6 +220,7 @@ def _run_multi_vol_tofu(
         )
 
     # Stores results
+    dout = {}
     dout['signal'] = dsig[key_cam]['data'] # dim(nx,ny), [photons/bin^2]
     
     # Stores detector configuration

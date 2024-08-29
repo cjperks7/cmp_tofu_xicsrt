@@ -37,7 +37,7 @@ dHPC = {
 dsave = {
     'path': os.path.join(
         '/home/cjperks',
-        'cmp_tofu_xicsrt,
+        'cmp_tofu_xicsrt',
         'HPC/output',
         sys.argv[2]
         ),
@@ -65,7 +65,7 @@ elif sys.argv[3] == 'xicsrt':
     run_xicsrt = True
 
 # Loads collection object
-dout, coll, config = utils.main(
+dout, coll = utils.main(
     lamb0 = lamb0, # [AA]
     coll_tf=os.path.join(
         '/home/cjperks',
