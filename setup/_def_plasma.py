@@ -9,9 +9,11 @@ Aug 5, 2024
 
 # Modules
 import numpy as np
+import os
 
 __all__ = [
-    'get_dplasma'
+    'get_dplasma',
+    'get_dvel'
     ]
 
 ####################################
@@ -55,3 +57,31 @@ def get_dplasma(option=None):
 
     # Output
     return dout
+
+
+# Gets default toroidal velocity settings
+def get_dvel(option=None):
+
+    # 1D flux-function parameters
+    rho = np.linspace(0,1,1001)
+    c1 = 2
+    c2 = 2
+    vtor0 = 100e3 # [m/s]
+
+    # Default parameters
+    dvel = {
+        'default': {
+            'geqdsk': os.path.join(
+                '/home/cjperks',
+                'tofu_sparc/background_plasma',
+                'PRD_plasma/run1',
+                'input.geq'
+                ),
+            'xquant': 'sq. norm. pol. flux',
+            'rho': rho,
+            'vel': vtor0 * (1-rho**c1)**c2,
+            }
+        }
+
+    # Output
+    return dvel[option]
