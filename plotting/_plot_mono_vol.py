@@ -26,17 +26,17 @@ __all__ = [
 
 # Plots point source results
 def plt_mono_vol(
-    coll = None,
-    key_diag = None,
-    cry_shape = 'Spherical',
-    lamb0 = None,
-    dout = None,
+    ddata = None,
     ):
+
+    ###########
+    # --- Detector images
+    ##########
 
 
     # Init
-    dxi = dout['XICSRT']
-    dtf = dout['ToFu']
+    dxi = ddata['XICSRT']
+    dtf = ddata['ToFu']
 
     # Rescale ToFu if different pixel binning
     scalet_0 = (
@@ -90,4 +90,117 @@ def plt_mono_vol(
 
 
     fig.show()
+
+    print('Total Flux Error:')
+    print('%0.2f %%'%(
+        (1-np.sum(dxi['signal'].flatten())/np.sum(dtf['signal'].flatten()))*100
+        )) #
+
+    ###########
+    # --- Image Slices
+    ##########
+
+    indy = int(dxi['npix'][1]/2-1)
+    indx = np.argmax(np.sum(dxi['signal'], axis=1))
+
+    indyt = int(dtf['npix'][1]/2-1)
+    indxt = np.argmin(abs(
+        dtf['cents_cm'][0] - dxi['cents_cm'][0][indx]
+        ))
+
+    # Rescale ToFu if different pixel binning
+    scalet_10 = scalet_11 = (
+        dtf['npix'][0]/dxi['npix'][0]
+        *dtf['npix'][1]/dxi['npix'][1]
+        )
+    scalet_01 = (
+        dtf['npix'][1]/dxi['npix'][1]
+        )
+    scalet_00 = (
+        dtf['npix'][0]/dxi['npix'][0]
+        )
+
+    fig4, ax4 = plt.subplots(2,2)
+
+
+    ax4[0,0].plot(
+        dxi['cents_cm'][0],
+        np.sum(dxi['signal'], axis = 1),
+        'b*-',
+        label = 'XICSRT'
+        )
+
+    ax4[0,0].plot(
+        dtf['cents_cm'][0],
+        np.sum(dtf['signal'], axis = 1) *scalet_00,
+        'r*-',
+        label = 'ToFu'
+        )
+
+    ax4[0,0].set_xlabel('horiz. bin [cm]')
+    ax4[0,0].set_ylabel('# photons/bin')
+    ax4[0,0].set_title('int. over all vert. bins')
+    ax4[0,0].grid('on')
+    ax4[0,0].legend(labelcolor='linecolor')
+
+    ax4[1,0].plot(
+        dxi['cents_cm'][0],
+        dxi['signal'][:,indy],
+        'b*-'
+        )
+
+    ax4[1,0].plot(
+        dtf['cents_cm'][0],
+        dtf['signal'][:,indyt] *scalet_10,
+        'r*-'
+        )
+
+    ax4[1,0].set_xlabel('horiz. bin [cm]')
+    ax4[1,0].set_ylabel('# photons/bin^2')
+    ax4[1,0].set_title('vert. bin %i/%i'%(indy, dxi['npix'][1]-1))
+    ax4[1,0].grid('on')
+
+    ax4[0,1].plot(
+        dxi['cents_cm'][1],
+        np.sum(dxi['signal'], axis = 0),
+        'b*-'
+        )
+
+    ax4[0,1].plot(
+        dtf['cents_cm'][1],
+        np.sum(dtf['signal'], axis = 0) *scalet_01,
+        'r*-'
+        )
+
+    ax4[0,1].set_xlabel('vert. bin [cm]')
+    ax4[0,1].set_ylabel('# photons/bin')
+    ax4[0,1].set_title('int. over all horz. bins')
+    ax4[0,1].grid('on')
+
+    ax4[1,1].plot(
+        dxi['cents_cm'][1],
+        dxi['signal'][indx,:],
+        'b*-'
+        )
+
+    ax4[1,1].plot(
+        dtf['cents_cm'][1],
+        dtf['signal'][indxt,:] *scalet_11,
+        'r*-'
+        )
+
+
+    ax4[1,1].set_xlabel('vert. bin [cm]')
+    ax4[1,1].set_ylabel('# photons/bin^2')
+    ax4[1,1].set_title('horz. bin %i/%i'%(indx, dxi['npix'][0]-1))
+    ax4[1,1].grid('on')
+
+
+
+
+
+
+
+
+
 
