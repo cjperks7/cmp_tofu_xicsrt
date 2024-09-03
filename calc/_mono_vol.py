@@ -158,6 +158,8 @@ def _run_mono_vol_tofu(
 
     # Init
     dout = {}
+    n0 = 51
+    n1 = 51
 
     # compute vos
     dvos, dref = coll.compute_diagnostic_vos(
@@ -171,8 +173,8 @@ def _run_mono_vol_tofu(
         lamb=coll.ddata['mlamb_bs1_ap']['data'],
         #n0=501,
         #n1=201,
-        n0=301,
-        n1=201,
+        n0=n0,
+        n1=n1,
         visibility=False,
         config=tf.load_config('SPARC-V0'),
         return_vector=False,
@@ -186,7 +188,7 @@ def _run_mono_vol_tofu(
 
     # Saves data
     dout['signal'] = sig/(4*np.pi)*1e6 # dim(nx,ny), [cm^3]
-    dout['dvos'] = dvos[key_cam]
+    #dout['dvos'] = dvos[key_cam]
 
     #coll.plot_diagnostic_vos(dvos=dvos)
 
@@ -254,6 +256,9 @@ def _loop_volumes_HPC(
     # HPC controls
     dHPC = None,
     calc_signal = None,
+    # Velocity controls
+    add_velocity = False,
+    dvel = None,
     ):
 
     # Determines how to index the VOS
@@ -337,6 +342,8 @@ def _loop_volumes_HPC(
             omega_binorm = omega_binorm[:,inds[0,ii], inds[1,ii], inds[2,ii]],
             omega_dl = omega_dl,
             dHPC = dHPC,
+            add_velocity = add_velocity,
+            dvel = dvel,
             )
 
         # Runs ray-tracing

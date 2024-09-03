@@ -72,7 +72,8 @@ def run_multi_vol(
             dout=dout,
             lamb0 = lamb0,
             dsave = dsave,
-            dHPC=dHPC
+            dHPC=dHPC,
+            case = 'me',
             )
     
     # Output
