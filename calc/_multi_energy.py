@@ -201,7 +201,7 @@ def _run_multi_vol_tofu(
     # Computes signal with emissivity
     dsig = coll.compute_diagnostic_signal(
         key='synth_vos_interp',
-        key_diag=key_daig,
+        key_diag=key_diag,
         key_cam=None,
         key_integrand='emissRZ',
         key_ref_spectro=None,

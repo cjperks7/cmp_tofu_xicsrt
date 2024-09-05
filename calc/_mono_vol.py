@@ -158,8 +158,10 @@ def _run_mono_vol_tofu(
 
     # Init
     dout = {}
-    n0 = 51
-    n1 = 51
+    n0 = 301
+    n1 = 301
+    print(n0)
+    print(n1)
 
     # compute vos
     dvos, dref = coll.compute_diagnostic_vos(

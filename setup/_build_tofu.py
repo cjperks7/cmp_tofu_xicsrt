@@ -64,7 +64,7 @@ def _init_diag(
         )
 
     # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
-    lamb, _ = me._build_lamb(lamb0=lamb0)
+    lamb, _ = me._build_lamb(lamb0=lamb0, nlamb=61)
 
     # Adds data to collection object
     coll.add_mesh_1d(
