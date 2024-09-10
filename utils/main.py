@@ -46,6 +46,9 @@ def main(
     dvol = None,    # Resolution controls
     # Multi-energy, volumetric source controls
     me_run = False,
+    # Radially-peaked emissivity data
+    rad_run = False,
+    emis_file = None,
     # HPC controls
     run_xicsrt = True,
     run_tofu = False,
@@ -121,6 +124,22 @@ def main(
             dsave = dsave
             )
 
+    ########## Radially-peaked emissivity data
+    if rad_run:
+        dout = calc.run_rad_emis(
+            coll = coll,
+            key_diag = key_diag,
+            key_cam = key_cam,
+            config = config,
+            dvol = dvol,
+            emis_file = emis_file,
+            # HPC controls
+            run_xicsrt=run_xicsrt,
+            run_tofu=run_tofu,
+            dHPC = dHPC,
+            dsave = dsave
+            ) 
+
     # Output
     return dout, coll
 
@@ -136,17 +155,19 @@ def _save(
     dout=None,
     case=None,
     lamb0 = None, # [AA]
+    key_diag = None,
     dsave = None,
     dHPC=None
     ):
 
     name = os.path.join(
         dsave['path'],
-        (
-            dsave['name'] 
-            + '_lamb%1.5fAA'%(lamb0)
-            )
+        dsave['name']
         )
+    if lamb0 is not None:
+        name += '_lamb%1.5fAA'%(lamb0)
+    if key_diag is not None:
+        name += '_'+key_diag
     if case in ['mv', 'me']:
         name += '_job%i'%(dHPC['job_num'])
     name += '.npz'
