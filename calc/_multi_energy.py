@@ -248,7 +248,8 @@ def _run_multi_vol_tofu(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
-        dout = dout
+        dout = dout,
+        split = False,
         )
 
     # Output

@@ -31,11 +31,17 @@ def _add_det_data(
     key_diag = None,
     key_cam = None,
     dout = None,
+    split = True,
     ):
 
+    if split:
+        kk = key_cam.split('_')[0]
+    else:
+        kk = key_cam
+
     # Extent of detector
-    dgeom_cam = coll.dobj['camera'][key_cam.split('_')[0]]['dgeom']
-    out0, out1 = coll.get_optics_outline(key_cam.split('_')[0], total=True)
+    dgeom_cam = coll.dobj['camera'][kk]['dgeom']
+    out0, out1 = coll.get_optics_outline(kk, total=True)
     dout['extent'] = (
         out0.min(), out0.max(), 
         out1.min(), out1.max()
@@ -47,16 +53,20 @@ def _add_det_data(
     # Pixel centers
     dout['cents_cm'] = [
         (
-            np.arange(dout['signal'].shape[0])
+            dout['extent'][0]
+            + (dout['extent'][1]-dout['extent'][0])
+            /dout['signal'].shape[0]/2
+            + np.arange(dout['signal'].shape[0])
             *(dout['extent'][1]-dout['extent'][0])
-            /(dout['signal'].shape[0]-1)
-            + dout['extent'][0]
+            /dout['signal'].shape[0]
             )*100,
         (
-            np.arange(dout['signal'].shape[1])
+            dout['extent'][2]
+            + (dout['extent'][3]-dout['extent'][2])
+            /dout['signal'].shape[1]/2
+            + np.arange(dout['signal'].shape[1])
             *(dout['extent'][3]-dout['extent'][2])
-            /(dout['signal'].shape[1]-1)
-            + dout['extent'][2]
+            /dout['signal'].shape[1]
             )*100,
         ]
 

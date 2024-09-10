@@ -233,6 +233,7 @@ def _run_mono_vol_tofu(
         key_diag = key_diag,
         key_cam = key_cam,
         dout = dout,
+        split = False,
         )
     
     # Output
