@@ -25,7 +25,7 @@ cry_shape = 'Cylindrical'
 # HPC controls
 dHPC = {
     'job_axis': ['vert' ,'binorm'],
-    'job_num': int(sys.argv[1]),
+    'job_num': 0,#int(sys.argv[1]),
     'job_max': 34, # Pythonic, 0,...,jm
     #'job_axis': ['vert'],
     #'job_num': int(sys.argv[1]),
@@ -39,7 +39,8 @@ dsave = {
         '/home/cjperks',
         'cmp_tofu_xicsrt',
         'HPC/output',
-        sys.argv[2]
+        #sys.argv[2]
+        'cyl_mv_v3'
         ),
     'name': 'delta_cyl'
     }
@@ -56,13 +57,16 @@ sys.stdout = open(
     'w'
     )
 '''
-
+'''
 if sys.argv[3] == 'tofu':
     run_tofu = True
     run_xicsrt = False
 elif sys.argv[3] == 'xicsrt':
     run_tofu = False
     run_xicsrt = True
+'''
+run_tofu = True
+run_xicsrt = False
 
 # Loads collection object
 dout, coll = utils.main(

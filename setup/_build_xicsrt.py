@@ -117,25 +117,19 @@ def _init_config(
         data = dgeom_cryst['cent'] # [m]
         )
     
-    # Object orientation
-    config['optics']['crystal']['zaxis'] = utils._tofu2xicsrt(
-        data = dgeom_cryst['nin'] # Normal
-        )
-    config['optics']['crystal']['xaxis'] = utils._tofu2xicsrt(
-        data = dgeom_cryst['e0']  # Horizontal
-        )
-
-    # Assures y-axis is up
-    if np.sum(np.cross(
-        config['optics']['crystal']['zaxis'], config['optics']['crystal']['xaxis']
-        )) < 0:
-            config['optics']['crystal']['xaxis'] *= -1
-    
     # 2d spacing
     config['optics']['crystal']['crystal_spacing'] = dmat_cryst['d_hkl']*1e10 # [AA]
 
     # Spherical crystal controls
     if cry_shape == 'Spherical':
+        # Object orientation
+        config['optics']['crystal']['zaxis'] = utils._tofu2xicsrt(
+            data = dgeom_cryst['nin'] # Normal
+            )
+        config['optics']['crystal']['xaxis'] = utils._tofu2xicsrt(
+            data = dgeom_cryst['e0']  # Horizontal
+            )
+
         # Object type
         config['optics']['crystal']['class_name'] = 'XicsrtOpticSphericalCrystal'
 
@@ -155,44 +149,80 @@ def _init_config(
     elif cry_shape == 'Cylindrical':
         # Object type
         config['optics']['crystal']['class_name'] = 'XicsrtOpticCylindricalCrystal'
+        
+        # Normal orientation
+        config['optics']['crystal']['zaxis'] = utils._tofu2xicsrt(
+            data = dgeom_cryst['nin'] # Normal
+            )
 
-        # Object size
-        config['optics']['crystal']['xsize'] = (
-            2*dgeom_cryst['extenthalf'][0]
-            #*dgeom_cryst['curve_r'][0]
-            ) # [m], Horizontal size
-        config['optics']['crystal']['ysize'] = (
-            2*dgeom_cryst['extenthalf'][1]
-            *dgeom_cryst['curve_r'][1]
-            ) # [m], Vertical size
+        # If the crystal is not curved in the dispersive direction
+        if np.isinf(dgeom_cryst['curve_r'][0]):
+            # Cylinder orientation
+            config['optics']['crystal']['xaxis'] = utils._tofu2xicsrt(
+                data = dgeom_cryst['e0']  # NOTE: XICSRT assumes "xaxis" is the cylinder axis (curved about)
+                )
 
-        # Object radius
-        config['optics']['crystal']['radius'] = dgeom_cryst['curve_r'][1] # [m]
+            # Object size
+            config['optics']['crystal']['xsize'] = (
+                2*dgeom_cryst['extenthalf'][0]
+                #*dgeom_cryst['curve_r'][0]
+                ) # [m], Horizontal size
+            config['optics']['crystal']['ysize'] = (
+                2*dgeom_cryst['extenthalf'][1]
+                *dgeom_cryst['curve_r'][1]
+                ) # [m], Vertical size
+
+            # Object radius
+            config['optics']['crystal']['radius'] = dgeom_cryst['curve_r'][1] # [m]
+
+        # If the crystal is not curved in the imaging direction
+        elif np.isinf(dgeom_cryst['curve_r'][1]):
+            # Cylinder orientation
+            config['optics']['crystal']['xaxis'] = utils._tofu2xicsrt(
+                data = dgeom_cryst['e1']  # NOTE: XICSRT assumes "xaxis" is the cylinder axis (curved about)
+                )
+
+            # Object size
+            config['optics']['crystal']['xsize'] = (
+                2*dgeom_cryst['extenthalf'][1]
+                #*dgeom_cryst['curve_r'][0]
+                ) # [m], Horizontal size
+            config['optics']['crystal']['ysize'] = (
+                2*dgeom_cryst['extenthalf'][0]
+                *dgeom_cryst['curve_r'][0]
+                ) # [m], Vertical size
+
+            # Object radius
+            config['optics']['crystal']['radius'] = dgeom_cryst['curve_r'][0] # [m]
+
+        # Error check
+        else:
+            print('ERROR IN CRYSTAL RADIUS!!!')
 
     # Error check
     else:
         print('NOT IMPLEMENTED YET!!!')
 
+    # Assures y-axis is up
+    if np.sum(np.cross(
+        config['optics']['crystal']['zaxis'], config['optics']['crystal']['xaxis']
+        )) < 0:
+            config['optics']['crystal']['xaxis'] *= -1
+
     # Rocking curve
-    ############ NOTE: TO BE GENERALIZED!!!
-    '''
-    config['optics']['crystal']['rocking_type'] = 'file'
-    config['optics']['crystal']['rocking_filetype'] = 'xop'
-    config['optics']['crystal']['rocking_file'] = os.path.join(
-        '/home/cjperks',
-        'atomic_world/run_XICSRT/scripts/',
-        'SPARC/rc_161',
-        'rc_'+"{:1.5F}".format(1.61)+'.dat'
-        )
-
-    config['optics']['crystal']['check_bragg'] = True
-    config['optics']['crystal']['rocking_type'] = 'step'
-    config['optics']['crystal']['rocking_fwhm'] = 4.515097569188164e-06*2
-    '''
-
     config['optics']['crystal']['rocking_type'] = 'tofu'
-    config['optics']['crystal']['rocking_material'] = 'Germanium'
-    config['optics']['crystal']['rocking_miller'] = np.r_[2., 0., 2.,]
+    if key_diag in ['XRSHRKr']:
+        config['optics']['crystal']['rocking_material'] = 'Germanium'
+        config['optics']['crystal']['rocking_miller'] = np.r_[2., 4., 2.,]
+    elif key_diag in ['XRSHRXe']:
+        config['optics']['crystal']['rocking_material'] = 'Quartz'
+        config['optics']['crystal']['rocking_miller'] = np.r_[1., 0., 1.,]
+    elif key_diag in ['XRSLR']:
+        config['optics']['crystal']['rocking_material'] = 'Germanium'
+        config['optics']['crystal']['rocking_miller'] = np.r_[2., 0., 2.,]
+    else:
+        config['optics']['crystal']['rocking_material'] = 'Germanium'
+        config['optics']['crystal']['rocking_miller'] = np.r_[2., 0., 2.,]
 
 
 
@@ -201,7 +231,7 @@ def _init_config(
     # -----------------------------------------------------------
 
     # create xicsrt camera
-    dgeom_cam = coll.dobj['camera'][key_cam]['dgeom']
+    dgeom_cam = coll.dobj['camera'][key_cam.split('_')[0]]['dgeom']
 
     # Init
     config['optics']['detector'] = {}
