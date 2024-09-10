@@ -12,9 +12,8 @@ import tofu as tf
 
 import numpy as np
 
-import cmp_tofu_xicsrt.setup._def_plasma as dp
 import cmp_tofu_xicsrt.setup._def_diag as dd
-import cmp_tofu_xicsrt.calc._multi_energy as me
+import cmp_tofu_xicsrt.utils as utils
 
 __all__ = [
     '_init_diag'
@@ -47,32 +46,6 @@ def _init_diag(
 
         # Saves diagnostic
         coll.save(path='/home/cjperks/cmp_tofu_xicsrt/diags')
-
-    # -------------------------
-    # add mesh to compute vos
-    # ------------------------
-
-    # Gets default plasma geometry
-    if dplasma is None:
-        dplasma = dp.get_dplasma(option='default')
-
-    coll.add_mesh_2d_rect(
-        key='mRZ',
-        res=0.01,
-        crop_poly=dplasma['crop_poly'],
-        deg = 1,
-        )
-
-    # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
-    lamb, _ = me._build_lamb(lamb0=lamb0, nlamb=61)
-
-    # Adds data to collection object
-    coll.add_mesh_1d(
-        key='mlamb',
-        knots=lamb*1e-10,
-        deg=1,
-        units='m',
-        )
 
     # Output
     return coll

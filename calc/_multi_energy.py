@@ -18,7 +18,6 @@ import cmp_tofu_xicsrt.calc._mono_vol as mv
 
 __all__ = [
     'run_multi_vol',
-    '_build_lamb',
     ]
 
 ##############################################
@@ -44,6 +43,13 @@ def run_multi_vol(
 
     # Init
     dout = {}
+
+    # Adds mesh data to compute VOS on
+    coll = utils._add_mesh_data(
+        coll = coll,
+        case = 'simple',
+        lamb = lamb0
+        )
 
     # Runs XICSRT
     if run_xicsrt:
@@ -101,7 +107,7 @@ def _run_multi_vol_xicsrt(
     dout = {}
 
     # Builds wavelength mesh
-    lamb, fE = _build_lamb(lamb0=lamb0)
+    lamb, fE = utils._build_gaussian(lamb0=lamb0)
 
     # Loop over wavelength
     for ii,ll in enumerate(lamb):
@@ -119,6 +125,7 @@ def _run_multi_vol_xicsrt(
             )
 
         # Performs wavelength integration
+        '''
         dout = _calc_signal(
             rays = tmp['detector']['origin'],
             voxels = tmp['voxels'],
@@ -129,9 +136,21 @@ def _run_multi_vol_xicsrt(
             nlamb = len(lamb),
             ilamb = ii,
             )
+        '''
+        dout['voxels'] = tmp['voxels']
+        dout = utils._calc_signal(
+            dout = dout,
+            config = config,
+            det_origin = tmp['detector']['origin'],
+            dlamb = lamb[1]-lamb[0],
+            ilamb = ilamb,
+            nlamb = len(lamb),
+            emis_val = fE[ii],
+            case = 'me',
+            )
 
     # Stores detector configuration
-    dout = mv._add_det_data(
+    dout = utils._add_det_data(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
@@ -151,7 +170,7 @@ def _run_multi_vol_tofu(
     ):
 
     # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
-    lamb, fE = _build_lamb(lamb0=lamb0)
+    lamb, fE = utils._build_gaussian(lamb0=lamb0)
 
     # Prepares Gaussian emissivity at 1 ph/s/cm3
     emiss = (
@@ -225,7 +244,7 @@ def _run_multi_vol_tofu(
     dout['signal'] = dsig[key_cam]['data'] # dim(nx,ny), [photons/bin^2]
     
     # Stores detector configuration
-    dout = mv._add_det_data(
+    dout = utils._add_det_data(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
@@ -235,6 +254,8 @@ def _run_multi_vol_tofu(
     # Output
     return dout
 
+
+'''
 ###################################################
 #
 #           Utilities
@@ -313,3 +334,4 @@ def _calc_signal(
 
     # Output
     return dout
+'''

@@ -19,7 +19,6 @@ __all__ = [
     'run_mono_vol',
     '_run_mono_vol_xicsrt',
     '_run_mono_vol_tofu',
-    '_add_det_data',
     ]
 
 
@@ -47,6 +46,13 @@ def run_mono_vol(
 
     # Init
     dout = {}
+
+    # Adds mesh data to compute VOS on
+    coll = utils._add_mesh_data(
+        coll = coll,
+        case = 'simple',
+        lamb = lamb0
+        )
 
     # Runs XICSRT
     if run_xicsrt:
@@ -99,7 +105,9 @@ def _run_mono_vol_xicsrt(
     dHPC = None,
     calc_signal = True,
     #vol_plt = vol_plt,
-    lamb0 = None
+    lamb0 = None,
+    demis = None,
+    case = 'mv',
     ):
 
     # Builds box spatial distribution
@@ -134,11 +142,13 @@ def _run_mono_vol_xicsrt(
         # HPC controls
         dHPC = dHPC,
         calc_signal = calc_signal,
+        demis = demis,
+        case = case,
         )
 
     if calc_signal:
         # Stores detector configuration
-        dout = _add_det_data(
+        dout = utils._add_det_data(
             coll = coll,
             key_diag = key_diag,
             key_cam = key_cam,
@@ -153,28 +163,31 @@ def _run_mono_vol_tofu(
     coll = None,
     key_diag = None,
     key_cam = None,
+    key_mesh = 'mRZ',
+    # Wavelength controls
     lamb0 = None, # [AA]
+    lamb_vec = None,
+    # Volume discretization controls
+    n0 = 51,
+    n1 = 51,
     ):
 
     # Init
     dout = {}
-    n0 = 301
-    n1 = 301
     print(n0)
     print(n1)
+
+    # Gets wavelength vector to compute VOS on
+    if lamb_vec is None:
+        lamb_vec = coll.ddata['mlamb_bs1_ap']['data']
 
     # compute vos
     dvos, dref = coll.compute_diagnostic_vos(
         key_diag=key_diag,
-        key_mesh='mRZ',
-        #res_RZ=[0.005, 0.01],         # 0.005 would be better
-        #res_phi=0.0002,        # 0.0002 would be better
+        key_mesh=key_mesh,
         res_RZ=[0.01, 0.01],         # 0.005 would be better
         res_phi=0.0005,        # 0.0002 would be better
-        # res_lamb=0.001e-10,
-        lamb=coll.ddata['mlamb_bs1_ap']['data'],
-        #n0=501,
-        #n1=201,
+        lamb=lamb_vec,
         n0=n0,
         n1=n1,
         visibility=False,
@@ -184,25 +197,14 @@ def _run_mono_vol_tofu(
         store=True,
         )
 
-    # Extracts VOS of wavelength of interest
-    indlamb0 = np.argmin(np.abs(dvos[key_cam]['lamb']['data'] - lamb0*1e-10))
-    sig = np.sum(dvos[key_cam]['ph']['data'][:, :, :, indlamb0], axis=2)
+    if lamb0 is not None:
+        # Extracts VOS of wavelength of interest
+        indlamb0 = np.argmin(np.abs(dvos[key_cam]['lamb']['data'] - lamb0*1e-10))
+        sig = np.sum(dvos[key_cam]['ph']['data'][:, :, :, indlamb0], axis=2)
 
-    # Saves data
-    dout['signal'] = sig/(4*np.pi)*1e6 # dim(nx,ny), [cm^3]
-    #dout['dvos'] = dvos[key_cam]
-
-    #coll.plot_diagnostic_vos(dvos=dvos)
-
-    #fig, ax = plt.subplots()
-    #if ax is not None:
-    #    im = ax.imshow(
-    #        sig.T, # [sr*m^3]
-    #        extent=extent,
-    #        interpolation='nearest',
-    #        origin='lower',
-    #        vmin=0,
-    #    )
+        # Saves data
+        dout['signal'] = sig/(4*np.pi)*1e6 # dim(nx,ny), [cm^3]
+        #dout['dvos'] = dvos[key_cam]
 
     # extract keys to R, Z coordinates of polygon definign vos in poloidal cross-section
     pcross0, pcross1 = tf.data._class8_vos_utilities._get_overall_polygons(
@@ -226,7 +228,7 @@ def _run_mono_vol_tofu(
     dout['phor'] = [phor0[ind], phor1[ind]]
 
     # Stores detector configuration
-    dout = _add_det_data(
+    dout = utils._add_det_data(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
@@ -261,6 +263,9 @@ def _loop_volumes_HPC(
     # Velocity controls
     add_velocity = False,
     dvel = None,
+    # Local emissivity controls
+    demis = None,
+    case = 'mv',
     ):
 
     # Determines how to index the VOS
@@ -385,22 +390,34 @@ def _loop_volumes_HPC(
             dout['crystal']['direction']
             ))
 
-    # Stores voxel data
-    dout['voxels'] = {}
-    dout['voxels']['dOmega_ster'] = (
-        2 *config_tmp['sources']['source']['spread'][0]
-        *2 *config_tmp['sources']['source']['spread'][1]
-        ) # [ster]
-    dout['voxels']['dvol_cm3'] = (
-        config_tmp['sources']['source']['zsize']
-        *config_tmp['sources']['source']['ysize']
-        *config_tmp['sources']['source']['xsize']
-        )*1e6 # [cm3]
-    dout['voxels']['num_rays'] = (
-        config_tmp['general']['number_of_iter']
-        *config_tmp['sources']['source']['intensity']
-        )
+        # Stores voxel data
+        dout['voxels'] = {}
+        dout['voxels']['dOmega_ster'] = (
+            2 *config_tmp['sources']['source']['spread'][0]
+            *2 *config_tmp['sources']['source']['spread'][1]
+            ) # [ster]
+        dout['voxels']['dvol_cm3'] = (
+            config_tmp['sources']['source']['zsize']
+            *config_tmp['sources']['source']['ysize']
+            *config_tmp['sources']['source']['xsize']
+            )*1e6 # [cm3]
+        dout['voxels']['num_rays'] = (
+            config_tmp['general']['number_of_iter']
+            *config_tmp['sources']['source']['intensity']
+            )
 
+        # Calculates detector signal
+        if calc_signal:
+            dout = utils._calc_signal(
+                dout = dout,
+                config = config,
+                demis = demis,
+                box_cent = box_cent[:,inds[0,ii], inds[1,ii], inds[2,ii]],
+                det_origin = results['found']['history']['detector']['origin'],
+                case = case,
+                )
+
+    '''
     if calc_signal:
         # Calculates histogram
         dhist = utils._calc_det_hist(
@@ -412,6 +429,7 @@ def _loop_volumes_HPC(
             dhist['counts'] 
             / utils._conv_2normEmis(voxels=dout['voxels'], case='mv')
             ) # dim(nx,ny), [photons/bin^2]
+    '''
 
     # Output
     return dout
@@ -427,47 +445,3 @@ def _have_common_divisor(num1, num2):
     else:
         return False
 
-
-# Adds useful data about the detector
-def _add_det_data(
-    coll = None,
-    key_diag = None,
-    key_cam = None,
-    dout = None,
-    ):
-
-    # Extent of detector
-    dgeom_cam = coll.dobj['camera'][key_cam]['dgeom']
-    out0, out1 = coll.get_optics_outline(key_cam, total=True)
-    dout['extent'] = (
-        out0.min(), out0.max(), 
-        out1.min(), out1.max()
-        )
-
-    # Aspect ratio of detector
-    dout['aspect'] = out0.max()/out1.max()
-
-    # Pixel centers
-    dout['cents_cm'] = [
-        (
-            np.arange(dout['signal'].shape[0])
-            *(dout['extent'][1]-dout['extent'][0])
-            /(dout['signal'].shape[0]-1)
-            + dout['extent'][0]
-            )*100,
-        (
-            np.arange(dout['signal'].shape[1])
-            *(dout['extent'][3]-dout['extent'][2])
-            /(dout['signal'].shape[1]-1)
-            + dout['extent'][2]
-            )*100,
-        ]
-
-    # Number of pixels
-    dout['npix'] = [
-        dout['signal'].shape[0], 
-        dout['signal'].shape[1]
-        ]
-
-    # Output
-    return dout
