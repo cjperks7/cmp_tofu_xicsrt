@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 
 import cmp_tofu_xicsrt.utils as utils
 import cmp_tofu_xicsrt.setup._def_point as dp
-import cmp_tofu_xicsrt.calc._mono_vol as mv
 
 __all__ = [
     'run_mono_pt',
@@ -218,7 +217,7 @@ def _run_mono_pt_xicsrt(
         ) # dim(nx,ny), [photons/bin^2]
 
     # Stores detector configuration
-    dout = mv._add_det_data(
+    dout = utils._add_det_data(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
@@ -259,7 +258,7 @@ def _run_mono_pt_tofu(
     dout['signal'] = dout['ray-trace']['sang_lamb']['data']/(4*np.pi)
 
     # Stores detector configuration
-    dout = mv._add_det_data(
+    dout = utils._add_det_data(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,

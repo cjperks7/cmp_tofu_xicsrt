@@ -21,8 +21,8 @@ import os
 
 # Wavelength
 lamb0 = 1.61 # [AA]
-#cry_shape = 'Spherical'
-cry_shape = 'Cylindrical'
+cry_shape = 'Spherical'
+#cry_shape = 'Cylindrical'
 
 # Save controls
 dsave = {
@@ -30,9 +30,9 @@ dsave = {
         '/home/cjperks',
         'cmp_tofu_xicsrt',
         'output',
-        'pt_v1'
+        'sph_pt_v2'
         ),
-    'name': 'pt_cyl'
+    'name': 'pt_sph'
     }
 
 
@@ -44,8 +44,8 @@ dout, coll = utils.main(
     coll_tf=os.path.join(
         '/home/cjperks',
         'cmp_tofu_xicsrt/diags',
-        #'valid_spherical_128x64.npz'
-        'valid_cylindrical_128x64.npz'
+        'valid_spherical_128x64.npz'
+        #'valid_cylindrical_128x64.npz'
         ),
     cry_shape = cry_shape,
     # Monochromatic, point source controls
@@ -65,30 +65,36 @@ import cmp_tofu_xicsrt.plotting as plotting
 import tofu as tf
 import os
 
+# Enables automatic reloading of modules
+%reload_ext autoreload
+%autoreload 2
+
+
 coll = tf.data.load(
     os.path.join(
         '/home/cjperks',
         'cmp_tofu_xicsrt/diags',
-        #'valid_spherical_128x64.npz'
-        'valid_cylindrical_128x64_v2.npz'
+        'valid_spherical_128x64.npz'
+        #'valid_cylindrical_128x64_v2.npz'
         )
     )
 dout = np.load(
     os.path.join(
         '/home/cjperks',
         'cmp_tofu_xicsrt/output',
-        'cyl_pt_v1',
-        'pt_cyl_lamb1.61000AA.npz'
+        #'cyl_pt_v1',
+        #'pt_cyl_lamb1.61000AA.npz'
+        'sph_pt_v2',
+        'pt_sph_lamb1.61000AA.npz'
         ),
     allow_pickle=True
     )['arr_0'][()]
 
-cry_shape = 'Cylindrical'
+#cry_shape = 'Cylindrical'
+cry_shape = 'Spherical'
 lamb0 = 1.61
 
 '''
-
-
 
 
 # Plots results

@@ -100,38 +100,38 @@ def _add_mesh_data(
     ):
 
     # If just want to consider a "square O-ring" shaped plasma
-    if case = 'simple':
-         # -------------------------
-    # add mesh to compute vos
-    # ------------------------
+    if case == 'simple':
+        # -------------------------
+        # add mesh to compute vos
+        # ------------------------
 
-    # Gets default plasma geometry
-    if dplasma is None:
-        ########### ----- Add (R,Z) mesh ------ ############
+        # Gets default plasma geometry
+        if dplasma is None:
+            ########### ----- Add (R,Z) mesh ------ ############
 
-        dplasma = dp.get_dplasma(option='default')
-        coll.add_mesh_2d_rect(
-            key='mRZ',
-            res=0.01,
-            crop_poly=dplasma['crop_poly'],
-            deg = 1,
-            )
+            dplasma = dp.get_dplasma(option='default')
+            coll.add_mesh_2d_rect(
+                key='mRZ',
+                res=0.01,
+                crop_poly=dplasma['crop_poly'],
+                deg = 1,
+                )
 
-        ########### ----- Add wavelength mesh ------ ############
+            ########### ----- Add wavelength mesh ------ ############
 
-        # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
-        lamb_vec, _ = utils._build_gaussian(lamb=lamb)
+            # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
+            lamb_vec, _ = utils._build_gaussian(lamb=lamb)
 
-        # Adds data to collection object
-        coll.add_mesh_1d(
-            key='mlamb',
-            knots=lamb_vec*1e-10,
-            deg=1,
-            units='m',
-            )
+            # Adds data to collection object
+            coll.add_mesh_1d(
+                key='mlamb',
+                knots=lamb_vec*1e-10,
+                deg=1,
+                units='m',
+                )
 
     # If adding flux-function mapping
-    elif case = 'rad_emis':
+    elif case == 'rad_emis':
         ########### ----- Add (R,Z) mesh ------ ############
 
         # Defines 2D R,Z rectangular mesh
