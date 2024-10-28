@@ -38,6 +38,7 @@ def main(
     # XICSRT data
     cry_shape = 'Spherical',
     niter = 5,
+    subcam = None,
     # Monochromatic, point source controls
     pt_run = False,
     dpt = None,     # Resolution controls
@@ -60,7 +61,8 @@ def main(
     coll = setup._init_diag(
         coll = coll_tf,
         dcry = cry_shape,
-        lamb0 = lamb0
+        lamb0 = lamb0,
+        subcam = subcam,
         )
 
     # Builds XICSRT diagnostic

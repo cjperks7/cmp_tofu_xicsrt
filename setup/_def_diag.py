@@ -107,10 +107,10 @@ def get_dcam(option=None):
 
     dcam = {
         'default':{
-            'cent': [ 1.87931835e+01, -2.00350423e+00,  1.80000000e-02],
-            'nin': [-0.76797874, -0.64047533,  0.        ],
-            'e0': [ 0.64047533, -0.76797874, -0.        ],
-            'e1': [ 0., -0.,  1.],
+            'cent': np.r_[ 1.87931835e+01, -2.00350423e+00,  1.80000000e-02],
+            'nin': np.r_[-0.76797874, -0.64047533,  0.        ],
+            'e0': np.r_[ 0.64047533, -0.76797874, -0.        ],
+            'e1': np.r_[ 0., -0.,  1.],
             'outline_x0': 0.5* pix_width * np.r_[-1, 1, 1, -1],
             'outline_x1': 0.5* pix_height * np.r_[-1, -1, 1, 1],
             'cents_x0': extenthalf[0] * np.linspace(-1, 1, nx0),
@@ -120,3 +120,18 @@ def get_dcam(option=None):
 
     # Output
     return dcam[option]
+
+# Get subcamera default options
+def get_dsubcam(option=None):
+
+    dsub = {
+        'Spherical':{
+            'dx': -0.167,       # Move horizontally
+            'xhalfsize': 0.03,
+            'dy': None,         # Move vertically
+            'yhalfsize': None
+            }
+        }
+
+    # Output
+    return dsub[option]
