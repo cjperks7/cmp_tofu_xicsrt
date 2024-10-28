@@ -93,6 +93,7 @@ def _add_mesh_data(
     key_cam = None,
     conf = None,
     case = 'simple',
+    dplasma = None,
     # Data for flux-function map
     R_knots = None,
     Z_knots = None,
@@ -120,7 +121,7 @@ def _add_mesh_data(
             ########### ----- Add wavelength mesh ------ ############
 
             # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
-            lamb_vec, _ = utils._build_gaussian(lamb=lamb)
+            lamb_vec, _ = utils._build_gaussian(lamb0=lamb)
 
             # Adds data to collection object
             coll.add_mesh_1d(

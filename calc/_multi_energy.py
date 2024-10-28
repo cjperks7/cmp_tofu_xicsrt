@@ -143,7 +143,7 @@ def _run_multi_vol_xicsrt(
             config = config,
             det_origin = tmp['detector']['origin'],
             dlamb = lamb[1]-lamb[0],
-            ilamb = ilamb,
+            ilamb = ii,
             nlamb = len(lamb),
             emis_val = fE[ii],
             case = 'me',

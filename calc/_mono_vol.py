@@ -168,8 +168,8 @@ def _run_mono_vol_tofu(
     lamb0 = None, # [AA]
     lamb_vec = None,
     # Volume discretization controls
-    n0 = 51,
-    n1 = 51,
+    n0 = 301,
+    n1 = 201,
     ):
 
     # Init

@@ -91,7 +91,7 @@ def _calc_signal(
         config = config,
         ) # dim(hor_pix, vert_pix)
     # wavelength-integration (via left-hand Riemann sum)
-    if 'signal' not in dout.key():
+    if 'signal' not in dout.keys():
         dout['signal'] = np.zeros(dhist['counts'].shape)
     dout['signal'] += (
         dhist['counts'] 
