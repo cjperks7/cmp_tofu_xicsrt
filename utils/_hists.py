@@ -13,12 +13,19 @@ import numpy as np
 import cmp_tofu_xicsrt.utils._conv as cv
 
 __all__ = [
-    '_calc_ang_hist',
+    '_calc_ang_hist_xicsrt',
+    '_calc_ang_hist_tofu',
     '_calc_det_hist'
     ]
 
+#############################################################
+#
+#               Rocking curve
+#
+#############################################################
+
 # Calculates the angular distribution of rays from XICSRT
-def _calc_ang_hist(
+def _calc_ang_hist_xicsrt(
     data = None,
     sim_type = 'mv',
     config = None,
@@ -71,6 +78,24 @@ def _calc_ang_hist(
                     ),
                 xi_vec_c2d
                 ))
+    elif sim_type == 'pt':
+        xi_src = cv._xicsrt2tofu(
+                data = data['XICSRT']['results']['found']['history']['source']['origin']
+                )
+        xi_cry = cv._xicsrt2tofu(
+                data = data['XICSRT']['results']['found']['history']['crystal']['origin']
+                )
+        xi_det = cv._xicsrt2tofu(
+                data = data['XICSRT']['results']['found']['history']['detector']['origin']
+                )
+
+        xi_vec_s2c = cv._xicsrt2tofu(
+                data = data['XICSRT']['results']['found']['history']['source']['direction']
+                )
+        xi_vec_c2d = cv._xicsrt2tofu(
+                data = data['XICSRT']['results']['found']['history']['crystal']['direction']
+                )
+    
 
     # Calculates the crystal normal vector
     xi_cry_norm = xi_vec_c2d - xi_vec_s2c
@@ -106,15 +131,19 @@ def _calc_ang_hist(
         bins = nbins
         )
 
+    # Calcualtes rocking curve
+    from atomic_world.run_TOFU.main import get_rocking as gr
+    drock = gr._get_rocking(
+        material = material,
+        miller = miller,
+        lamb0 = lamb0,
+        plt_all = False
+        )
+    intr = np.trapz(drock['pwr'], drock['angle']*1e6) # [urad]
+
     # Plotting
     if plt_all:
-        from atomic_world.run_TOFU.main import get_rocking as gr
-        drock = gr._get_rocking(
-            material = material,
-            miller = miller,
-            lamb0 = lamb0,
-            plt_all = False
-            )
+        
         
         fig1, ax1 = plt.subplots(1,2)
 
@@ -153,7 +182,6 @@ def _calc_ang_hist(
 
         fig1.suptitle('XICSRT', color = 'blue')
 
-        intr = np.trapz(drock['pwr'], drock['angle']*1e6)
         wid = np.diff(bins_in)*np.pi/180*1e6 # [urad]
         int_in = np.sum(hist_in * wid/np.max(hist_in)*np.max(drock['pwr']))
         wid = np.diff(bins_out)*np.pi/180*1e6 # [urad]
@@ -170,15 +198,101 @@ def _calc_ang_hist(
         print(int_out)
         print('Error [%]')
         print(abs(int_out/intr-1)*100)
+
+    # Normalizes the histograms by the integrated reflectivity
+    hist_in = (
+        hist_in
+        /np.sum(hist_in * np.diff(bins_in))
+        *intr/1e6*180/np.pi
+        )
+    hist_out = (
+        hist_out
+        /np.sum(hist_out * np.diff(bins_out))
+        *intr/1e6*180/np.pi
+        )
         
 
     # Output
     return {
         'hist_in': hist_in,
-        'ang_in': bins_in,
+        'ang_in': bins_in, # [deg]
         'hist_out': hist_out,
-        'ang_out': bins_out
+        'ang_out': bins_out, # [deg]
+        'bragg': bragg, # [deg]
+        'rc_ang': (drock['angle']-drock['bragg'])*180/np.pi,
+        'rc_pwr': drock['pwr']/np.max(drock['pwr']),
+        'rc_Rint': intr, # [urad]
         }
+
+
+
+# Calculates the angular distribution of rays from ToFu
+def _calc_ang_hist_tofu(
+    dtf = None,     # Output results from ToFu ray-tracing from _mono_pt
+    lamb0 = None,
+    ):
+
+    # Init
+    dout = dtf['ray-trace']
+
+    # Gets start/end points of rays
+    tf_src = np.c_[
+        dout['lpx']['data'][0][0,:],
+        dout['lpy']['data'][0][0,:],
+        dout['lpz']['data'][0][0,:],
+        ]
+
+    tf_cry = np.c_[
+        dout['lpx']['data'][0][1,:],
+        dout['lpy']['data'][0][1,:],
+        dout['lpz']['data'][0][1,:],
+        ]
+
+    tf_det = np.c_[
+        dout['lpx']['data'][0][2,:],
+        dout['lpy']['data'][0][2,:],
+        dout['lpz']['data'][0][2,:],
+        ]
+
+    # Finds vectors
+    tf_vec_c2d = tf_det-tf_cry
+    tf_vec_c2d /= np.linalg.norm(tf_vec_c2d, axis = 1)[:,None]
+
+    tf_vec_s2c = tf_cry-tf_src
+    tf_vec_s2c /= np.linalg.norm(tf_vec_s2c, axis=1)[:,None] # dim(nrays, 3)
+
+
+    tf_cry_norm = tf_vec_c2d - tf_vec_s2c
+    tf_cry_norm /= np.linalg.norm(tf_cry_norm, axis=1)[:,None]
+
+    # Angular distribution
+    tf_ang_in = abs(90- np.arccos(
+        np.einsum('ij,ij->i',
+            tf_vec_s2c,
+            tf_cry_norm
+            )
+        )*180/np.pi) # [deg]
+
+    tf_ang_out = abs(90- np.arccos(
+        np.einsum('ij,ij->i',
+            tf_vec_c2d,
+            tf_cry_norm
+            )
+        )*180/np.pi) # [deg]
+
+    # Output
+    return {
+        'ang_in': tf_ang_in,
+        'ang_out': tf_ang_out,
+        'pwr_in': dout['dpow']['data'][lamb0][0]
+        }
+
+
+#############################################################
+#
+#               Detector
+#
+#############################################################
 
 # Calculates histogram of the detector surface
 def _calc_det_hist(

@@ -215,6 +215,7 @@ def _run_mono_pt_xicsrt(
         dhist['counts'] 
         / utils._conv_2normEmis(voxels=voxels, case='pt')
         ) # dim(nx,ny), [photons/bin^2]
+    dout['config'] = config
 
     # Stores detector configuration
     dout = utils._add_det_data(

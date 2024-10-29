@@ -16,6 +16,7 @@ import matplotlib.gridspec as gridspec
 plt.rcParams.update({'font.size': 16})
 
 import cmp_tofu_xicsrt.setup._def_point as dp
+import cmp_tofu_xicsrt.utils as utils
 
 __all__ = [
     'plt_mono_pt'
@@ -33,9 +34,10 @@ def plt_mono_pt(
     coll = None,
     key_diag = None,
     cry_shape = 'Spherical',
-    lamb0 = None,
+    lamb0 = None, # [AA]
     dout = None,
     dpt = None,
+    plt_rc = False,
     ):
 
     # Gets default values
@@ -196,8 +198,13 @@ def plt_mono_pt(
     print(np.sum(dxi['signal'].flatten()))
 
 
+    #####################################################################
+    #
+    #           Used in paper
+    #
+    ####################################################################
 
-    ###### ---- Used in paper ---- ######
+    ###### ---- Detector image ---- ######
 
     fig3 = plt.figure(figsize = (16,10))
     gs3 = gridspec.GridSpec(2,2, width_ratios = [2,1], hspace = 0.30)
@@ -341,8 +348,69 @@ def plt_mono_pt(
     #    )
 
 
+    ###### ---- Rocking curve distributions ---- ######
+    if plt_rc:
 
+        # Get XICSRT distributions
+        dang_xi = utils._calc_ang_hist_xicsrt(
+            data = dout,
+            sim_type = 'pt',
+            plt_all = False,
+            config = dout['XICSRT']['config'],
+            nbins = 100,
+            )
 
+        # Gets ToFu distributions
+        dang_tf = utils._calc_ang_hist_tofu(
+            dtf = dtf,
+            lamb0 = lamb0*1e-10,
+            )
+
+        figr, axr = plt.subplots(1,2, figsize = (8,6))
+
+        axr[0].bar(
+            (dang_xi['ang_in'][1:]+dang_xi['ang_in'][:-1])/2*3.6e3,
+            dang_xi['hist_in']/np.max(dang_xi['hist_in']),
+            width = np.diff(dang_xi['ang_in'])*3.6e3,
+            color = 'b'
+            )
+        axr[0].plot(
+            dang_xi['rc_ang']*3.6e3,
+            dang_xi['rc_pwr']/np.max(dang_xi['rc_pwr']),
+            linewidth = 3,
+            color = 'k'
+            )
+
+        axr[0].set_xlabel(r'$\theta_{in}-\theta_B$ [arcsec]')
+        axr[0].set_ylabel('Reflected power')
+        axr[0].grid('on')
+        axr[0].set_title('XICSRT', color = 'b')
+
+        #axr[0].set_xlim(dang_xi['ang_in'][0], dang_xi['ang_in'][-1])
+        axr[0].set_xlim(-36, 36)
+        axr[0].set_ylim(0, 1.05)
+
+        axr[1].plot(
+            (dang_tf['ang_in']-dang_xi['bragg'])*3.6e3,
+            dang_tf['pwr_in']/np.max(dang_tf['pwr_in']),
+            '*',
+            color = 'r'
+            )
+        axr[1].plot(
+            dang_xi['rc_ang']*3.6e3,
+            dang_xi['rc_pwr']/np.max(dang_xi['rc_pwr']),
+            linewidth = 3,
+            color = 'k'
+            )
+
+        axr[1].set_xlabel(r'$\theta_{in}-\theta_B$ [arcsec]')
+        #axr[1].set_ylabel('norm. dist')
+        axr[1].grid('on')
+        axr[1].set_title('ToFu', color = 'r')
+
+        #axr[1].set_xlim(dang_xi['ang_in'][0], dang_xi['ang_in'][-1])
+        axr[1].set_xlim(-36, 36)
+        axr[1].set_ylim(0,1.05)
 
 
 

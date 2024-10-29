@@ -30,7 +30,7 @@ dsave = {
         '/home/cjperks',
         'cmp_tofu_xicsrt',
         'output',
-        'sph_pt_v2'
+        'sph_pt_v3'
         ),
     'name': 'pt_sph'
     }
@@ -84,7 +84,7 @@ dout = np.load(
         'cmp_tofu_xicsrt/output',
         #'cyl_pt_v1',
         #'pt_cyl_lamb1.61000AA.npz'
-        'sph_pt_v2',
+        'sph_pt_v3',
         'pt_sph_lamb1.61000AA.npz'
         ),
     allow_pickle=True
@@ -105,5 +105,6 @@ plotting.plt_mono_pt(
     lamb0 = lamb0,
     dout = dout,
     dpt = None,
+    plt_rc = True,
     )
 
