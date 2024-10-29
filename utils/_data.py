@@ -13,6 +13,7 @@ import os
 
 import cmp_tofu_xicsrt.utils as utils
 import cmp_tofu_xicsrt.setup._def_plasma as dp
+import cmp_tofu_xicsrt.setup._def_diag as dd
 
 __all__ = [
     '_add_det_data',
@@ -32,6 +33,7 @@ def _add_det_data(
     key_cam = None,
     dout = None,
     split = True,
+    subcam = None,
     ):
 
     if split:
@@ -69,6 +71,13 @@ def _add_det_data(
             /dout['signal'].shape[1]
             )*100,
         ]
+
+    if subcam is not None:
+        dsub = dd.get_dsubcam(option=subcam)
+        if dsub['dx'] is not None:
+            dout['cents_cm'] += dsub['dx']*1e2
+        if dsub['dy'] is not None:
+            dout['cents_cm'] += dsub['dy']*1e2
 
     # Number of pixels
     dout['npix'] = [

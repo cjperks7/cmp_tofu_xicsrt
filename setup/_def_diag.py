@@ -126,10 +126,10 @@ def get_dsubcam(option=None):
 
     dsub = {
         'Spherical':{
-            'dx': -0.167,       # Move horizontally
-            'xhalfsize': 0.03,
-            'dy': None,         # Move vertically
-            'yhalfsize': None
+            'dx': -0.167/1e2,       # [m], Move horizontally
+            'xhalfsize': 0.045/1e2, # [m]
+            'dy': None,             # [m], Move vertically
+            'yhalfsize': None       # [m]
             }
         }
 

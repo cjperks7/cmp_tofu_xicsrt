@@ -102,6 +102,7 @@ def main(
             config = config,
             dvol = dvol,
             lamb0 = lamb0,
+            subcam = subcam,
             # HPC controls
             run_xicsrt=run_xicsrt,
             run_tofu=run_tofu,
@@ -119,6 +120,7 @@ def main(
             config = config,
             dvol = dvol,
             lamb0 = lamb0,
+            subcam = subcam,
             # HPC controls
             run_xicsrt=run_xicsrt,
             run_tofu=run_tofu,

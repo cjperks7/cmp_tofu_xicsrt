@@ -102,7 +102,7 @@ def _build_diag(
 
     # Takes a subset of the camera area if requested
     if subcam is not None:
-        dsub = dd.get_dsubcam(option=dcry)
+        dsub = dd.get_dsubcam(option=subcam)
 
         if dsub['dx'] is not None:
             dcam['cent'] += dcam['e0']*dsub['dx']

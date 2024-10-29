@@ -35,6 +35,7 @@ def run_mono_vol(
     key_cam = None,
     config = None,
     dvol = None,
+    subcam = None,
     #vol_plt = vol_plt,
     lamb0 = None,
     # HPC controls
@@ -72,7 +73,8 @@ def run_mono_vol(
             coll = coll,
             key_diag = key_diag,
             key_cam = key_cam,
-            lamb0 = lamb0
+            lamb0 = lamb0,
+            subcam = subcam,
             )
 
     # Saves XICSRT data
@@ -164,6 +166,7 @@ def _run_mono_vol_tofu(
     key_diag = None,
     key_cam = None,
     key_mesh = 'mRZ',
+    subcam = None,
     # Wavelength controls
     lamb0 = None, # [AA]
     lamb_vec = None,
@@ -234,6 +237,7 @@ def _run_mono_vol_tofu(
         key_cam = key_cam,
         dout = dout,
         split = False,
+        subcam = subcam,
         )
     
     # Output

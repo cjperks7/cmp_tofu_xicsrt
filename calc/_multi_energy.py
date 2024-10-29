@@ -34,6 +34,7 @@ def run_multi_vol(
     config = None,
     dvol = None,
     lamb0 = None,
+    subcam = None,
     # HPC controls
     run_xicsrt = True,
     run_tofu = False,
@@ -69,7 +70,8 @@ def run_multi_vol(
             coll = coll,
             key_diag = key_diag,
             key_cam = key_cam,
-            lamb0 = lamb0
+            lamb0 = lamb0,
+            subcam = subcam,
             )
 
     # Saves XICSRT data
@@ -167,6 +169,7 @@ def _run_multi_vol_tofu(
     key_diag = None,
     key_cam = None,
     lamb0 = None,
+    subcam = None,
     ):
 
     # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
@@ -174,7 +177,7 @@ def _run_multi_vol_tofu(
 
     # Prepares Gaussian emissivity at 1 ph/s/cm3
     emiss = (
-        1e-6 # [ph/s/m3]
+        1e6 # [ph/s/m3]
         *fE*1e10 # [1/m]
         / (4*np.pi) # [1/sr]
         ) # [ph/s/m3/sr/m], dim(nlamb,)
@@ -250,6 +253,7 @@ def _run_multi_vol_tofu(
         key_cam = key_cam,
         dout = dout,
         split = False,
+        subcam = subcam,
         )
 
     # Output
