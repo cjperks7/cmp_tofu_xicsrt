@@ -10,6 +10,8 @@ Aug 5, 2024
 # Modules
 import numpy as np
 
+import tofu as tf
+
 __all__ = [
     '_tofu2xicsrt',
     '_xicsrt2tofu',
@@ -84,7 +86,7 @@ def _get_tofu_los(
     key_diag = None,
     key_cam = None,
     lamb0 = None,
-    R0 = 1.85,      # [m], magnetic axis
+    R0 = 1.89553,      # [m], magnetic axis (with Shafarnov shift)
     ):
 
     # Gets wavelength mesh
@@ -94,16 +96,45 @@ def _get_tofu_los(
         lamb='lamb',
         ) # dim(nx, ny)
 
-    # Finds indices of interest
-    indy = int(lamb.shape[1]/2-1) # Takes midline
-    indx = np.argmin(abs(lamb0*1e-10 - lamb[:,indy]))
-
-    # Gets LOS vector data
-    vx, vy, vz = coll.get_rays_vect(key_diag)
-    vect = np.r_[vx[-1,indx,indy], vy[-1,indx,indy], vz[-1,indx,indy]]
-
-    # Gets LOS point data
+    # Gets LOS point/vector data
     ptsx, ptsy, ptsz = coll.get_rays_pts(key_diag)
+    vx, vy, vz = coll.get_rays_vect(key_diag)
+
+    # extract keys to R, Z coordinates of polygon definign vos in poloidal cross-section
+    pcross0, pcross1 = tf.data._class8_vos_utilities._get_overall_polygons(
+        coll, 
+        doptics=coll.dobj['diagnostic'][key_diag]['doptics'], 
+        key_cam=key_cam, 
+        poly='pcross', 
+        convexHull=False
+        )
+    
+    # Finds indices of interest
+    #indy = int(lamb.shape[1]/2-1) # Takes midline
+    #indy = np.nanargmin(abs(
+    #    ptsz[-1,indx,:] - np.nanmean(ptsz[-1,indx,:])
+    #    ))
+    #indx = np.nanargmin(abs(lamb0*1e-10 - lamb[:,indy]))
+
+    indy = 0
+    res0 = 1e5
+    for yy in np.arange(lamb.shape[1]):
+        if np.all(np.isnan(lamb[:,yy])):
+            continue
+        # Find LOS that terminates in the middle vertically of VOS for this wavelength
+        else:
+            indx = np.nanargmin(abs(lamb0*1e-10 - lamb[:,yy]))
+
+            res = abs(
+                ptsz[-1,indx,yy] - np.nanmean(pcross1)
+                )
+
+            if res < res0 and not np.isnan(res):
+                res0 = res.copy()
+                indy = yy.copy()
+
+    # Gets LOS of interest
+    vect = np.r_[vx[-1,indx,indy], vy[-1,indx,indy], vz[-1,indx,indy]]
     p0 = np.r_[ptsx[-1,indx,indy], ptsy[-1,indx,indy], ptsz[-1,indx,indy]] # Inboard wall
 
     # Finds when LOS is closest to magnetic axis
@@ -115,9 +146,9 @@ def _get_tofu_los(
 
     # Output
     return {
-        'los_vect': vect,
-        'los_p0': p0,
-        'mag_axis': p0 - tt[indr]*vect
+        'los_vect': vect, # LOS vector
+        'los_p0': p0, # Inboard wall location
+        'mag_axis': p0 - tt[indr]*vect # Location closest to magnetic axis
         }
     
     

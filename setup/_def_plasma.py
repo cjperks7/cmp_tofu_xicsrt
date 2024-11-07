@@ -32,8 +32,8 @@ def get_dplasma(option=None):
         'SPARC':{
             'Zmax': 9/100,  # [m]
             'Zmin' :-5/100, # [m]
-            'R0': 1.85,     # [m]
-            'aa': 0.57,     # [m]
+            'R0': 1.85,     # [m], major radius
+            'aa': 0.57,     # [m], minor radius
         }
     }
     R0 = dtok[key]['R0']

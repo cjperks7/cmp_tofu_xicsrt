@@ -253,94 +253,22 @@ def _build_boxes(
     if dvol is None:
         dvol = dv.get_dvol(option='default')
 
-    # ToFu VOS data
-    #xxs = coll.ddata[key_diag+'_'+key_cam+'_vos_ph0']['data']
-    #yys = coll.ddata[key_diag+'_'+key_cam+'_vos_ph1']['data']
-
-    #rrs = coll.ddata[key_diag+'_'+key_cam+'_vos_pc0']['data']
-    #zzs = coll.ddata[key_diag+'_'+key_cam+'_vos_pc1']['data']
-
-    lamb, refs = coll.get_diagnostic_lamb(
-        key_diag,
-        key_cam=key_cam,
-        lamb='lamb',
+    # Finds pt closest to the magnetic axis for this wavelength
+    # NOTE: per the midplane LOS
+    dlos = utils._get_tofu_los(
+        coll = coll,
+        key_diag = key_diag,
+        key_cam = key_cam,
+        lamb0 = lamb0
         )
-
-    vx, vy, vz = coll.get_rays_vect(key_diag)
-    ptsx, ptsy, ptsz = coll.get_rays_pts(key_diag)
-
-    # Prepares ToFu VOS data for the wavelength of interest
-    inds_v = np.nan*np.zeros(ptsx.shape[2]) # dim(nvert,)
-
-    #xx0 = np.nan*np.zeros((xxs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
-    #yy0 = np.nan*np.zeros((xxs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
-    #zz0 = np.nan*np.zeros((zzs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
-    #rr0 = np.nan*np.zeros((zzs.shape[0], xxs.shape[2])) # dim(nchord, nvert)
-
-    losx = np.nan*np.zeros((2, ptsx.shape[2])) # dim(nseg, nvert)
-    losy = np.nan*np.zeros((2, ptsx.shape[2])) # dim(nseg, nvert)
-    losz = np.nan*np.zeros((2, ptsx.shape[2])) # dim(nseg, nvert)
-    losr = np.nan*np.zeros((2, ptsx.shape[2])) # dim(nseg, nvert)
-
-    vlosx = np.nan*np.zeros(vx.shape[2]) # dim(nvert)
-    vlosy = np.nan*np.zeros(vy.shape[2]) # dim(nvert)
-    vlosz = np.nan*np.zeros(vz.shape[2]) # dim(nvert)
-
-    for vv in np.arange(ptsx.shape[2]):
-        if np.isnan(np.mean(lamb[:,vv])):
-            continue
-        
-        else:
-            inds_v[vv] = np.argmin(abs(lamb0*1e-10 - lamb[:,vv]))
-
-            #xx0[:,vv] = xxs[:,int(inds_v[vv]), vv]
-            #yy0[:,vv] = yys[:,int(inds_v[vv]), vv]
-            #zz0[:,vv] = zzs[:,int(inds_v[vv]), vv]
-            #rr0[:,vv] = rrs[:,int(inds_v[vv]), vv]
-
-            losx[0,vv] = ptsx[2,int(inds_v[vv]), vv]
-            losx[1,vv] = ptsx[1,int(inds_v[vv]), vv]
-            losy[0,vv] = ptsy[2,int(inds_v[vv]), vv]
-            losy[1,vv] = ptsy[1,int(inds_v[vv]), vv]
-            losz[0,vv] = ptsz[2,int(inds_v[vv]), vv]
-            losz[1,vv] = ptsz[1,int(inds_v[vv]), vv]
-
-            losr[0,vv] = np.sqrt(losx[0,vv]**2 + losy[0,vv]**2)
-            losr[1,vv] = np.sqrt(losx[1,vv]**2 + losy[1,vv]**2)
-
-            vlosx[vv] = vx[1,int(inds_v[vv]), vv]
-            vlosy[vv] = vy[1,int(inds_v[vv]), vv]
-            vlosz[vv] = vz[1,int(inds_v[vv]), vv]
-
-
-    # VOS radial bounds
-    #rbnd = np.r_[
-    #    np.nanmax(rr0.flatten()),
-    #    np.nanmin(rr0.flatten())
-    #    ]
-
-    # Midplane LOS vector
-    mid_i = int(len(vlosx)/2-1)
-    mid_v = np.r_[
-        vlosx[mid_i],
-        vlosy[mid_i],
-        vlosz[mid_i]
-        ]
-
-    # Central point to pin discretization
-    lls = np.linspace(0,1,500)
-    tmps = (
-        np.r_[losx[0,mid_i], losy[0,mid_i], losz[0,mid_i]][:,None]
-        - lls[None,:]*mid_v[:,None]
-        )
-    tmpr = np.sqrt(tmps[0,:]**2+tmps[1,:]**2)
-    ind_r = np.argmin(abs(R0-tmpr))
 
     # Central box on magnetic axis
-    C0 = tmps[:,ind_r]
-
+    #C0 = tmps[:,ind_r]
+    C0 = dlos['mag_axis']
+    
     # Vector basis
-    vn = mid_v
+    #vn = mid_v
+    vn = dlos['los_vect']
     vz = np.r_[0,0,1]
     vb = np.cross(vz,vn)
 
