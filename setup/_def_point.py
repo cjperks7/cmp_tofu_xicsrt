@@ -8,7 +8,8 @@ Stores default values for building point source
 import numpy as np
 
 __all__ = [
-    'get_dpt'
+    'get_dpt',
+    'get_dres',
     ]
 
 #########################################
@@ -17,7 +18,7 @@ __all__ = [
 #
 #########################################
 
-# Defaults for voxel sizes
+# Defaults for point source resolution
 def get_dpt(
     option = None,
     ):
@@ -61,3 +62,31 @@ def get_dpt(
 
     # Output
     return dpt[option]
+
+# Defaults for spatial-/spectral-resolution
+def get_dres(option=None):
+
+    # Options
+    dres = {
+        'XRSHRKr':{
+            'dz': 7/100, # [m], maximum vertical excursion in one direction
+            'nz': 11, # number of vertical steps to make
+            'dy': 0.5e-3, # [A], maximum spectral excursion in one direction 
+            'ny': 11, # number of spectral steps to make
+            },
+        'XRSHRXe':{
+            'dz': 7/100, # [m], maximum vertical excursion in one direction
+            'nz': 11, # number of vertical steps to make
+            'dy': 1.3e-3, # [A], maximum spectral excursion in one direction 
+            'ny': 11, # number of spectral steps to make
+            },
+        'XRSLR':{
+            'dz': 7/100, # [m], maximum vertical excursion in one direction
+            'nz': 11, # number of vertical steps to make
+            'dy': 0.7e-3, # [A], maximum spectral excursion in one direction 
+            'ny': 11, # number of spectral steps to make
+            },
+        }
+
+    # Output
+    return dres[option]

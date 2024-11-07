@@ -50,6 +50,9 @@ def main(
     # Radially-peaked emissivity data
     rad_run = False,
     emis_file = None,
+    # Spectral-/spatial-resolution data
+    res_run = False,
+    dres = None,
     # HPC controls
     run_xicsrt = True,
     run_tofu = False,
@@ -144,6 +147,23 @@ def main(
             dsave = dsave
             ) 
 
+    ########## Spatial-/spectral-resolution data
+    if res_run:
+        dout = calc.run_resolution(
+            coll = coll,
+            key_diag = key_diag,
+            key_cam = key_cam,
+            config = config,
+            lamb0 = lamb0,
+            cry_shape = cry_shape,
+            dpt = dpt,
+            dres = dres,
+            # HPC controls
+            run_xicsrt = run_xicsrt,
+            run_tofu = run_tofu,
+            dsave = dsave,
+            )
+
     # Output
     return dout, coll
 
@@ -185,6 +205,7 @@ def _get_mv_results(
     folder_xi = None,
     folder_tf = None,
     name = None,
+    case = 'mv',
     ):
     from cmp_tofu_xicsrt.utils import _conv as cv
 
@@ -204,21 +225,29 @@ def _get_mv_results(
             allow_pickle=True
             )['arr_0'][()]['XICSRT']
 
-        for op in optics:
-            for kk in dxi[key][op].keys():
-                dxi[key][op][kk] = cv._xicsrt2tofu(
-                    data=dxi[key][op][kk]
-                    )
+        if case == 'mv':
+            for op in optics:
+                for kk in dxi[key][op].keys():
+                    dxi[key][op][kk] = cv._xicsrt2tofu(
+                        data=dxi[key][op][kk]
+                        )
 
         # Adds together signal data
         if 'signal' not in dxi.keys():
             dxi['signal'] = np.zeros(dxi[key]['signal'].shape)
-            dxi['voxels'] = dxi[key]['voxels']
+
+            if 'voxels' in dxi[key].keys():  ############### Temporary version control fix
+                dxi['voxels'] = dxi[key]['voxels']
             dxi['extent'] = dxi[key]['extent']
             dxi['aspect'] = dxi[key]['aspect']
             dxi['cents_cm'] = dxi[key]['cents_cm']
             dxi['npix'] = dxi[key]['npix']
+            if case == 'me':
+                dxi['lambda_AA'] = dxi[key]['lambda_AA']
+                dxi['dispersion'] = np.zeros(dxi[key]['signal'].shape +dxi[key]['lambda_AA'].shape)
         dxi['signal'] += dxi[key]['signal']
+        if case == 'me':
+            dxi['dispersion'] += dxi[key]['dispersion']
 
     # Loads ToFu data
     tf_fils = [f for f in os.listdir(folder+'/'+folder_tf) if f.startswith(name)] 
