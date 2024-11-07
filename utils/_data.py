@@ -10,6 +10,7 @@ Sep 10, 2024
 # Module
 import numpy as np
 import os
+from scipy.interpolate import interp1d
 
 import cmp_tofu_xicsrt.utils as utils
 import cmp_tofu_xicsrt.setup._def_plasma as dp
@@ -17,6 +18,7 @@ import cmp_tofu_xicsrt.setup._def_diag as dd
 
 __all__ = [
     '_add_det_data',
+    '_get_dispersion_xicsrt',
     '_add_mesh_data',
     ]
 
@@ -88,6 +90,39 @@ def _add_det_data(
     # Output
     return dout
 
+# Get dispersion data v. pixel from XICSRT
+def _get_dispersion_xicsrt(
+    dxi = None,         # Direction of XICSRT data from multi_energy run
+    lamb0 = None,
+    ):
+
+    # Init
+    dxi['lambda_pix'] = {}
+
+    # Calculates centroid wavelength
+    dxi['lambda_pix']['centroid'] = (
+        np.sum(
+            dxi['dispersion']*dxi['lambda_AA'][None,None,:],
+            axis = -1
+            )
+        /np.sum(dxi['dispersion'], axis = -1)
+        )
+
+    # Calculates resultant Gaussian
+    lamb, fE = utils._build_gaussian(lamb0=lamb0)
+
+    dxi['lambda_pix']['gaussian'] = np.zeros_like(dxi['lambda_pix']['centroid'])
+
+    # Loop over vertical pixels
+    for yy in np.arange(dxi['lambda_pix']['gaussian'].shape[1]):
+        dxi['lambda_pix']['gaussian'][:,yy] = interp1d(
+            lamb, fE,
+            bounds_error=False,
+            fill_value = 0.0
+            )(dxi['lambda_pix']['centroid'][:,yy])
+
+    # Output
+    return dxi
 
 ############################################
 #
