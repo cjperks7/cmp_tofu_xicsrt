@@ -67,7 +67,7 @@ def get_dpt(
                 'plt': False,
                 },
             'XICSRT':{
-                'intensity': 1e7,
+                'intensity': 2e6,
                 'dOmega': [
                     0.0011,     # height 
                     0.000018     # width
@@ -89,9 +89,9 @@ def get_dres(option=None):
     dres = {
         'XRSHRKr':{
             'dz': 7/100, # [m], maximum vertical excursion in one direction
-            'nz': 11, # number of vertical steps to make
+            'nz': 21, # number of vertical steps to make
             'dy': 0.5e-3, # [A], maximum spectral excursion in one direction 
-            'ny': 11, # number of spectral steps to make
+            'ny': 41, # number of spectral steps to make
             },
         'XRSHRXe':{
             'dz': 7/100, # [m], maximum vertical excursion in one direction

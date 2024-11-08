@@ -161,7 +161,6 @@ def _run_mono_pt_xicsrt(
     # extract dict of optics
     doptics = coll.dobj['diagnostic'][key_diag]['doptics']
     kap = doptics[key_cam]['optics'][1:][0]
-    print(kap)
     #vpt = config['optics']['crystal']['origin'] - pt
     vpt = config['optics'][kap]['origin'] - pt
     vpt /= np.linalg.norm(vpt)
