@@ -166,6 +166,7 @@ def _run_res_pt_xicsrt(
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['signal'] = dtmp['signal']
 
     # Stores detector configuration
+    dout['signal'] = np.zeros_like(dtmp['signal']) # dummy value to get function to work
     dout = utils._add_det_data(
         coll = coll,
         key_diag = key_diag,
@@ -218,6 +219,7 @@ def _run_res_pt_tofu(
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['signal'] = dtmp['signal']
 
     # Stores detector configuration
+    dout['signal'] = np.zeros_like(dtmp['signal']) # dummy value to get function to work
     dout = utils._add_det_data(
         coll = coll,
         key_diag = key_diag,
