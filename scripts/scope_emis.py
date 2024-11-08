@@ -19,9 +19,9 @@ from cmp_tofu_xicsrt.plotting import _scope_emis as se
 
 # File management
 emis_file = os.path.join(
-    '/home/cjperks/work',
-    'conferences/HTPD24/data',
-    '170424_XRSHRKr_FAC_test_SpecEmis.npz'
+    '/home/cjperks/',
+    'cmp_tofu_xicsrt/emis',
+    'XRSHRKr.npz'
     ) # He-like Kr, PRD profiles
 gfile = os.path.join(
     '/home/cjperks',

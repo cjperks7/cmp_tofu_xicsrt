@@ -92,6 +92,8 @@ def scope_emis(
         key_cam = key_cam,
         lamb0 = lamb0
         )
+    print('Closest to Magnetic Axis')
+    print(dlos['mag_axis'])
 
     # Mesh to loop over
     dz = np.linspace(
