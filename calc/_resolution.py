@@ -171,7 +171,8 @@ def _run_res_pt_xicsrt(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
-        dout = dout
+        dout = dout,
+        split = True,
         )
 
     # Output
@@ -224,7 +225,8 @@ def _run_res_pt_tofu(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
-        dout = dout
+        dout = dout,
+        split = False,
         )
 
     # Output
