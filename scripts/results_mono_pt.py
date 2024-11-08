@@ -20,9 +20,13 @@ import os
 ### --- Controls --- ###
 
 # Wavelength
-lamb0 = 1.61 # [AA]
-cry_shape = 'Spherical'
-#cry_shape = 'Cylindrical'
+#lamb0 = 1.61 # [AA]
+lamb0 = 0.945 # [AA]
+#cry_shape = 'Spherical'
+cry_shape = 'Cylindrical'
+
+key_diag = 'XRSHRKr'
+key_cam = 'e1M3_XRSHRKr'
 
 # Save controls
 dsave = {
@@ -30,9 +34,11 @@ dsave = {
         '/home/cjperks',
         'cmp_tofu_xicsrt',
         'output',
-        'sph_pt_v3'
+        #'sph_pt_v3'
+        'XRSHRKr_pt_v1'
         ),
-    'name': 'pt_sph'
+    #'name': 'pt_sph'
+    'name': 'pt_XRSHRKr'
     }
 
 
@@ -44,10 +50,13 @@ dout, coll = utils.main(
     coll_tf=os.path.join(
         '/home/cjperks',
         'cmp_tofu_xicsrt/diags',
-        'valid_spherical_128x64.npz'
+        'sparc_htpd24_v2.npz'
+        #'valid_spherical_128x64.npz'
         #'valid_cylindrical_128x64.npz'
         ),
     cry_shape = cry_shape,
+    key_diag = key_diag,
+    key_cam = key_cam,
     # Monochromatic, point source controls
     pt_run = True,
     dpt = None,
@@ -100,11 +109,11 @@ lamb0 = 1.61
 # Plots results
 plotting.plt_mono_pt(
     coll = coll,
-    key_diag = 'valid',
+    key_diag = key_diag,
     cry_shape = cry_shape,
     lamb0 = lamb0,
     dout = dout,
     dpt = None,
-    plt_rc = True,
+    plt_rc = False,
     )
 

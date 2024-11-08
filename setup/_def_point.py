@@ -58,6 +58,25 @@ def get_dpt(
                 'xind': None,
                 }
             },
+        'XRSHRKr': {
+            'ToFu':{
+                #'point': np.r_[1.89106408, 0.14276134, 0.01514425],
+                'point': np.r_[1.88851308, 0.1547071 , 0.04172155],
+                'n0': 5001,#10001,
+                'n1': 5001,#10001,
+                'plt': False,
+                },
+            'XICSRT':{
+                'intensity': 1e7,
+                'dOmega': [
+                    0.0011,     # height 
+                    0.000018     # width
+                    ] # [rad]
+                },
+            'plotting':{
+                'xind': None,
+                }
+            },
         }
 
     # Output

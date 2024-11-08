@@ -56,7 +56,10 @@ def run_mono_pt(
 
     # Gets default values
     if dpt is None:
-        dpt = dp.get_dpt(option=cry_shape)
+        if key_diag == 'valid':
+            dpt = dp.get_dpt(option=cry_shape)
+        else:
+            dpt = dp.get_dpt(option=key_diag)
 
     # Makes the point source
     if dpt['ToFu']['point'] is None:
@@ -153,10 +156,14 @@ def _run_mono_pt_xicsrt(
     #pt = np.r_[1.8, 0.18, 0]
     #pt = np.r_[0.18, 0, 1.8]
     #pt = np.r_[0.18,0,1.8]
-
+    
     # Defines normal axis of point source toward crystal center
+    # extract dict of optics
+    doptics = coll.dobj['diagnostic'][key_diag]['doptics']
+    kap = doptics[key_cam]['optics'][1:][0]
+    print(kap)
     #vpt = config['optics']['crystal']['origin'] - pt
-    vpt = config['optics']['ap']['origin'] - pt
+    vpt = config['optics'][kap]['origin'] - pt
     vpt /= np.linalg.norm(vpt)
     #print(vpt)
 
@@ -192,7 +199,7 @@ def _run_mono_pt_xicsrt(
     # Plots intersect of point source rays with Port
     if pt_plt:
         import xicsrt.visual.xicsrt_2d__matplotlib as xicsrt_2d
-        xicsrt_2d.plot_intersect(results, 'ap')
+        xicsrt_2d.plot_intersect(results, kap)
         xicsrt_2d.plot_intersect(results, 'crystal')
         xicsrt_2d.plot_intersect(results, 'detector')
 
@@ -200,7 +207,7 @@ def _run_mono_pt_xicsrt(
     dhist = utils._calc_det_hist(
         rays = results['found']['history']['detector']['origin'],
         config = config,
-        nx = 128,
+        nx = 256,#128,
         ny = 64
         ) # dim(hor_pix, vert_pix)
     # wavelength-integration (via left-hand Riemann sum)
@@ -222,7 +229,8 @@ def _run_mono_pt_xicsrt(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
-        dout = dout
+        dout = dout,
+        split = True,
         )
 
     # Output
@@ -263,7 +271,8 @@ def _run_mono_pt_tofu(
         coll = coll,
         key_diag = key_diag,
         key_cam = key_cam,
-        dout = dout
+        dout = dout,
+        split = False,
         )
 
     # Output

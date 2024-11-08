@@ -40,7 +40,7 @@ def run_resolution(
     cry_shape = None,
     dpt = None,
     dres = None,
-    use_mag_axis_point = True, # NOTE: per the midplane LOS
+    use_mag_axis_point = False, # NOTE: per the midplane LOS
     # HPC controls
     run_xicsrt = None,
     run_tofu = None,

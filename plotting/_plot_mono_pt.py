@@ -48,14 +48,27 @@ def plt_mono_pt(
     dxi = dout['XICSRT']
     dtf = dout['ToFu']
 
+    dx_xi = np.mean(abs(dxi['cents_cm'][0][1:] - dxi['cents_cm'][0][:-1]))
+    dy_xi = np.mean(abs(dxi['cents_cm'][1][1:] - dxi['cents_cm'][1][:-1]))
+    dx_tf = np.mean(abs(dtf['cents_cm'][0][1:] - dtf['cents_cm'][0][:-1]))
+    dy_tf = np.mean(abs(dtf['cents_cm'][1][1:] - dtf['cents_cm'][1][:-1]))
+
     # Rescale ToFu if different pixel binning
+    #scalet_0 = (
+    #    dtf['npix'][0]/dxi['npix'][0]
+    #    *dtf['npix'][1]/dxi['npix'][1]
+    #    )
+    #scalet_1 = (
+    #    dtf['npix'][1]/dxi['npix'][1]
+    #    )
     scalet_0 = (
-        dtf['npix'][0]/dxi['npix'][0]
-        *dtf['npix'][1]/dxi['npix'][1]
+        dx_tf/dx_xi
+        *dy_tf/dy_tf
         )
     scalet_1 = (
-        dtf['npix'][1]/dxi['npix'][1]
+        dy_tf/dy_xi
         )
+    
 
     cmax = np.max((
         np.max(dxi['signal'].flatten()),
@@ -92,7 +105,7 @@ def plt_mono_pt(
         )
     #cb = plt.colorbar(im1, ax=ax1, orientation='horizontal')
     ax[0].set_title('ToFu, # ph detected = %1.5e'%(
-        np.sum(dtf['signal'].flatten())
+        np.sum(dtf['signal'].flatten())*scalet_0
         ), color = 'red')
     ax[0].set_xlabel('horizontal bin')
     ax[0].set_ylabel('vertical bin')
@@ -116,6 +129,7 @@ def plt_mono_pt(
         xind = dpt['plotting']['xind']
 
     xind_tf = np.argmin(abs(dxi['cents_cm'][0][xind]-dtf['cents_cm'][0]))
+    #xind_tf = np.argmax(np.sum(dtf['signal'], axis=1))
 
 
     # Comparison plot of photon flux at fixed Horizontal bin
@@ -193,7 +207,7 @@ def plt_mono_pt(
     # Integrated photons on detector
     print('Normalized # ph detected')
     print('ToFu')
-    print(np.sum(dtf['signal'].flatten()))
+    print(np.sum(dtf['signal'].flatten())*scalet_0)
     print('XICSRT')
     print(np.sum(dxi['signal'].flatten()))
 
