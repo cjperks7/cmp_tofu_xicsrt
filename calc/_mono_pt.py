@@ -16,6 +16,8 @@ import cmp_tofu_xicsrt.setup._def_point as dp
 
 __all__ = [
     'run_mono_pt',
+    '_run_mono_pt_xicsrt',
+    '_run_mono_pt_tofu',
     ]
 
 ###################################################

@@ -205,7 +205,7 @@ def _run_res_pt_tofu(
             dout['zind_%i'%(ii)]['yind_%i'%(jj)] = {}
 
             # Runs ToFu point source ray-tracing
-            dtmp = calc.run_mono_pt_tofu(
+            dtmp = calc._run_mono_pt_tofu(
                 coll = coll,
                 key_diag = key_diag,
                 key_cam = key_cam,
