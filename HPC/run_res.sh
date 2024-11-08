@@ -6,8 +6,8 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem-per-cpu=500G
 #SBATCH -p sched_mit_psfc_r8
-#SBATCH --output=output/XRSHRKr_res_v1/slurm_%a.out
-#SBATCH --error=output/XRSHRKr_res_v1/slurm_%a.err
+#SBATCH --output=output/XRSHRKr_res_v1/slurm_%j.out
+#SBATCH --error=output/XRSHRKr_res_v1/slurm_%j.err
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=cjperks@mit.edu
 

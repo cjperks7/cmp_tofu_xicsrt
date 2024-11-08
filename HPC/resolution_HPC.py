@@ -11,7 +11,7 @@ Aug 5, 2024
 # Modules
 import cmp_tofu_xicsrt.utils as utils
 import cmp_tofu_xicsrt.plotting as plotting
-import os
+import sys, os
 
 # Enables automatic reloading of modules
 #%reload_ext autoreload
