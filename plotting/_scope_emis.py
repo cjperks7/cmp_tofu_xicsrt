@@ -160,7 +160,9 @@ def scope_emis(
         )
 
     cbar = fig.colorbar(con, ax=ax)
-    cbar.set_label(r'$\varepsilon$ [$%s$]'%(emis[key_diag]['emis']['units']))
+    cbar.set_label(r'$\varepsilon$ [$%s$] @ $\lambda=$%0.3f $\AA$'%(
+        emis[key_diag]['emis']['units'], lamb0
+        ))
 
     # Machine
     ax.plot(
