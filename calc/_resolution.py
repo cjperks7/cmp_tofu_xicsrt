@@ -40,7 +40,8 @@ def run_resolution(
     cry_shape = None,
     dpt = None,
     dres = None,
-    use_mag_axis_point = False, # NOTE: per the midplane LOS
+    los_method = 'camera_midline',
+    etendue_degree = 2,
     # HPC controls
     run_xicsrt = None,
     run_tofu = None,
@@ -58,14 +59,22 @@ def run_resolution(
 
     # If user speficially wants pt to be on the magnetic axis
     # NOTE: per the midplane LOS
-    if use_mag_axis_point:
-        tmp = utils._get_tofu_los(
-            coll = coll,
-            key_diag = key_diag,
-            key_cam = key_cam,
-            lamb0 = lamb0
-            )
-        dpt['ToFu']['point'] = tmp['mag_axis'] # [m], dim(3,)
+    danchor = utils._get_tofu_los(
+        coll = coll,
+        key_diag = key_diag,
+        key_cam = key_cam,
+        lamb0 = lamb0,
+        method = los_method
+        )
+    dpt['ToFu']['point'] = danchor['los_mag_axis'] # [m], dim(3,)
+
+    # Gets dot product between LOS vector and aperture normal
+    doptics = coll.dobj['diagnostic'][key_diag]['doptics']
+    kap = doptics[key_cam]['optics'][1:][0]
+    cos_anchor = np.dot(
+        danchor['los_vect'], 
+        coll.dobj['aperture'][kap]['dgeom']['nin']
+        )
 
     # Mesh to loop over
     dres['lambs'] = np.linspace(
@@ -73,12 +82,45 @@ def run_resolution(
         dres['ny']
         ) # dim(ny,)
     dz = np.linspace(
-        dpt['ToFu']['point'][-1] - dres['dz'], 
-        dpt['ToFu']['point'][-1] + dres['dz'], 
+        -dres['dz'], dres['dz'],
         dres['nz']
         ) # dim(nz,)
-    dres['pts'] = np.array([dpt['ToFu']['point'].copy() for _ in dz]) # dim(nz,3)
-    dres['pts'][:,-1] = dz # dim(nz,3)
+
+    # Init
+    dres['pts'] = np.zeros(dz.shape + dres['lambs'].shape + (3,)) # dim(nz,ny,3)
+
+    # Loop over vertical scan
+    for ii, zz in enumerate(dz):
+        print(zz)
+        # Loop over spectral scan
+        for jj, yy in enumerate(dres['lambs']):
+            print(yy)
+            # Get LOS for this wavelength
+            dnew = utils._get_tofu_los(
+                coll = coll,
+                key_diag = key_diag,
+                key_cam = key_cam,
+                lamb0 = yy,
+                method = los_method
+                )
+
+            # Find LOS distance to keep etendue roughly the same
+            cos_new = np.dot(
+                dnew['los_vect'], 
+                coll.dobj['aperture'][kap]['dgeom']['nin']
+                )
+            L_new = danchor['L_ma2cry'] *(
+                cos_new/cos_anchor
+                )**(1/etendue_degree)
+
+            # Defines point
+            dres['pts'][ii,jj,:] = (
+                dnew['los_cry']
+                + L_new * dnew['los_vect']
+                )
+
+        # Adds the vertical shift
+        dres['pts'][ii,:,-1] += zz
 
 
     # Runs XICSRT
@@ -137,18 +179,15 @@ def _run_res_pt_xicsrt(
     dout = {}
 
     # Loop over vertical locations
-    for ii, zz in enumerate(dres['pts']):
+    for ii in np.arange(dres['pts'].shape[0]):
         dout['zind_%i'%(ii)] = {}
-
-        # Alters the point source controls
-        ddum = copy.deepcopy(dpt)
-        ddum['ToFu']['pt'] = zz
-
-        # Saves location
-        dout['zind_%i'%(ii)]['pt'] = zz
 
         # Loop over wavelengths
         for jj, yy in enumerate(dres['lambs']):
+            # Alters the point source controls
+            ddum = copy.deepcopy(dpt)
+            ddum['ToFu']['point'] = dres[ii,jj,:]
+
             dout['zind_%i'%(ii)]['yind_%i'%(jj)] = {}
 
             # Runs XICSRT point source ray-tracing
@@ -159,11 +198,16 @@ def _run_res_pt_xicsrt(
                 config = config,
                 dpt = ddum,
                 lamb0 = yy, # [AA]
+                nx = 1028,
+                ny = 1062,
                 )
 
             # Saves wavelength data
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['lamb_AA'] = yy
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['signal'] = dtmp['signal']
+
+            # Saves location data
+            dout['zind_%i'%(ii)]['yind_%i'%(jj)]['pt'] = dres[ii,jj,:]
 
     # Stores detector configuration
     dout['signal'] = np.zeros_like(dtmp['signal']) # dummy value to get function to work
@@ -192,18 +236,15 @@ def _run_res_pt_tofu(
     dout = {}
 
     # Loop over vertical locations
-    for ii, zz in enumerate(dres['pts']):
+    for ii in np.arange(dres['pts'].shape[0]):
         dout['zind_%i'%(ii)] = {}
-
-        # Alters the point source controls
-        ddum = copy.deepcopy(dpt)
-        ddum['ToFu']['pt'] = zz
-
-        # Saves location
-        dout['zind_%i'%(ii)]['pt'] = zz
 
         # Loop over wavelengths
         for jj, yy in enumerate(dres['lambs']):
+            # Alters the point source controls
+            ddum = copy.deepcopy(dpt)
+            ddum['ToFu']['point'] = dres[ii,jj,:]
+
             dout['zind_%i'%(ii)]['yind_%i'%(jj)] = {}
 
             # Runs ToFu point source ray-tracing
@@ -218,6 +259,9 @@ def _run_res_pt_tofu(
             # Saves wavelength data
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['lamb_AA'] = yy
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['signal'] = dtmp['signal']
+
+            # Saves location data
+            dout['zind_%i'%(ii)]['yind_%i'%(jj)]['pt'] = dres[ii,jj,:]
 
     # Stores detector configuration
     dout['signal'] = np.zeros_like(dtmp['signal']) # dummy value to get function to work

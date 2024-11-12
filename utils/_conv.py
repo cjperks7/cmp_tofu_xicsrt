@@ -87,6 +87,7 @@ def _get_tofu_los(
     key_cam = None,
     lamb0 = None,
     R0 = 1.89553,      # [m], magnetic axis (with Shafarnov shift)
+    method = 'camera_midline', # 'vos_midline'
     ):
 
     # Gets wavelength mesh
@@ -110,45 +111,93 @@ def _get_tofu_los(
         )
     
     # Finds indices of interest
-    #indy = int(lamb.shape[1]/2-1) # Takes midline
-    #indy = np.nanargmin(abs(
-    #    ptsz[-1,indx,:] - np.nanmean(ptsz[-1,indx,:])
-    #    ))
-    #indx = np.nanargmin(abs(lamb0*1e-10 - lamb[:,indy]))
+    if method == 'camera_midline':
+        indy = int(lamb.shape[1]/2-1) # Takes midline
+        #indx = np.nanargmin(abs(lamb0*1e-10 - lamb[:,indy]))
 
-    indy = 0
-    res0 = 1e5
-    for yy in np.arange(lamb.shape[1]):
-        if np.all(np.isnan(lamb[:,yy])):
-            continue
-        # Find LOS that terminates in the middle vertically of VOS for this wavelength
-        else:
-            indx = np.nanargmin(abs(lamb0*1e-10 - lamb[:,yy]))
+        # If array is monotonically decreasing
+        if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) <0:
+            indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][-1] # last greater number
+            indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][0] # first smaller number
+        # If array is monotonically increasing
+        if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) >0:
+            indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][0] # first greater number
+            indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][-1] # last smaller number
 
-            res = abs(
-                ptsz[-1,indx,yy] - np.nanmean(pcross1)
-                )
+    elif method == 'vos_midline':
+        indy = 0
+        res0 = 1e5
+        for yy in np.arange(lamb.shape[1]):
+            if np.all(np.isnan(lamb[:,yy])):
+                continue
+            # Find LOS that terminates in the middle vertically of VOS for this wavelength
+            else:
+                #indx = np.nanargmin(abs(lamb0*1e-10 - lamb[:,yy]))
 
-            if res < res0 and not np.isnan(res):
-                res0 = res.copy()
-                indy = yy.copy()
+                #res = abs(
+                #    ptsz[-1,indx,yy] - np.nanmean(pcross1)
+                #    )
+                # If array is monotonically decreasing
+                if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) <0:
+                    indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][-1] # last greater number
+                    indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][0] # first smaller number
+                # If array is monotonically increasing
+                if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) >0:
+                    indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][0] # first greater number
+                    indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][-1] # last smaller number
 
-    # Gets LOS of interest
-    vect = np.r_[vx[-1,indx,indy], vy[-1,indx,indy], vz[-1,indx,indy]]
-    p0 = np.r_[ptsx[-1,indx,indy], ptsy[-1,indx,indy], ptsz[-1,indx,indy]] # Inboard wall
+                res_up = abs(
+                    ptsz[-1,indx_up,yy] - np.nanmean(pcross1)
+                    )
+                res_low = abs(
+                    ptsz[-1,indx_low,yy] - np.nanmean(pcross1)
+                    )
+                res = 0.5*(res_up+res_low)
+
+                if res < res0 and not np.isnan(res):
+                    res0 = res.copy()
+                    indy = yy.copy()
+
+    # Interpolates to get LOS of interest
+    p_in_up = np.r_[
+        ptsx[-1,indx_up,indy], ptsy[-1,indx_up,indy], ptsz[-1,indx_up,indy]
+        ] # Inboard wall
+    p_in_low = np.r_[
+        ptsx[-1,indx_low,indy], ptsy[-1,indx_low,indy], ptsz[-1,indx_low,indy]
+        ] # Inboard wall
+    p_cry_up = np.r_[
+        ptsx[-2,indx_up,indy], ptsy[-2,indx_up,indy], ptsz[-2,indx_up,indy]
+        ] # Inboard wall
+    p_cry_low = np.r_[
+        ptsx[-2,indx_low,indy], ptsy[-2,indx_low,indy], ptsz[-2,indx_low,indy]
+        ] # Inboard wall
+
+    ratio = (lamb0*1e-10 - lamb[indx_low,indy])/(lamb[indx_up,indy] - lamb[indx_low,indy])
+    p_in = p_in_low + ratio *(p_in_up-p_in_low)
+    p_cry = p_cry_low + ratio *(p_cry_up-p_cry_low)
+
+    # Get LOS vector
+    vect = p_in - p_cry
+    vect /= np.linalg.norm(vect)
 
     # Finds when LOS is closest to magnetic axis
     tt = np.linspace(0,2,501) # [m]
-    ps = p0[None,:] - tt[:,None]*vect[None,:] # dim(npt, 3)
+    ps = p_in[None,:] - tt[:,None]*vect[None,:] # dim(npt, 3)
     rs = np.sqrt(ps[:,0]**2 + ps[:,1]**2) # dim(npt,)
 
     indr = np.argmin(abs(rs-R0))
+    p_ma = p_in - tt[indr]*vect
+
+    # Distance from magnetic axis point to crystal
+    L_ma2cry = np.linalg.norm(p_ma-p_cry) # [m]
 
     # Output
-    return {
+    return { 
         'los_vect': vect, # LOS vector
-        'los_p0': p0, # Inboard wall location
-        'mag_axis': p0 - tt[indr]*vect # Location closest to magnetic axis
+        'los_inboard': p_in, # [m], Inboard wall location
+        'los_mag_axis': p_ma, # [m], Location closest to magnetic axis
+        'los_cry': p_cry, # [m], Location on crystal surface
+        'L_ma2cry': L_ma2cry, # [m], Distance from mag. axis pt. to crystal surface
         }
     
     
