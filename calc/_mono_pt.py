@@ -146,6 +146,9 @@ def _run_mono_pt_xicsrt(
     dpt = None,
     lamb0 = None, # [AA]
     pt_plt = False,
+    # Detector mesh
+    nx = 256,
+    ny = 64,
     ):
 
     # Init
@@ -208,8 +211,8 @@ def _run_mono_pt_xicsrt(
     dhist = utils._calc_det_hist(
         rays = results['found']['history']['detector']['origin'],
         config = config,
-        nx = 256,#128,
-        ny = 64
+        nx = nx,#128,
+        ny = ny
         ) # dim(hor_pix, vert_pix)
     # wavelength-integration (via left-hand Riemann sum)
     voxels = {
