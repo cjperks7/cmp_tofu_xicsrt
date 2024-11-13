@@ -186,7 +186,7 @@ def _run_res_pt_xicsrt(
         for jj, yy in enumerate(dres['lambs']):
             # Alters the point source controls
             ddum = copy.deepcopy(dpt)
-            ddum['ToFu']['point'] = dres[ii,jj,:]
+            ddum['ToFu']['point'] = dres['pts'][ii,jj,:]
 
             dout['zind_%i'%(ii)]['yind_%i'%(jj)] = {}
 
@@ -207,7 +207,7 @@ def _run_res_pt_xicsrt(
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['signal'] = dtmp['signal']
 
             # Saves location data
-            dout['zind_%i'%(ii)]['yind_%i'%(jj)]['pt'] = dres[ii,jj,:]
+            dout['zind_%i'%(ii)]['yind_%i'%(jj)]['pt'] = dres['pts'][ii,jj,:]
 
     # Stores detector configuration
     dout['signal'] = np.zeros_like(dtmp['signal']) # dummy value to get function to work
@@ -243,7 +243,7 @@ def _run_res_pt_tofu(
         for jj, yy in enumerate(dres['lambs']):
             # Alters the point source controls
             ddum = copy.deepcopy(dpt)
-            ddum['ToFu']['point'] = dres[ii,jj,:]
+            ddum['ToFu']['point'] = dres['pts'][ii,jj,:]
 
             dout['zind_%i'%(ii)]['yind_%i'%(jj)] = {}
 
@@ -261,7 +261,7 @@ def _run_res_pt_tofu(
             dout['zind_%i'%(ii)]['yind_%i'%(jj)]['signal'] = dtmp['signal']
 
             # Saves location data
-            dout['zind_%i'%(ii)]['yind_%i'%(jj)]['pt'] = dres[ii,jj,:]
+            dout['zind_%i'%(ii)]['yind_%i'%(jj)]['pt'] = dres['pts'][ii,jj,:]
 
     # Stores detector configuration
     dout['signal'] = np.zeros_like(dtmp['signal']) # dummy value to get function to work
