@@ -169,7 +169,7 @@ def _build_diag(
                 indx_low = np.where(
                     (
                         coll.ddata[cam_label+'_c0']['data'] 
-                        + coll.dobj['camera'][cam_label]['dgeom']['extenthalf'][0]
+                        - coll.dobj['camera'][cam_label]['dgeom']['extenthalf'][0]
                         ) <= dsub['dx'] - dsub['xhalfsize']
                     )[0][-1] # Last pixel physically before cutoff
 
@@ -187,7 +187,7 @@ def _build_diag(
                 indy_low = np.where(
                     (
                         coll.ddata[cam_label+'_c1']['data'] 
-                        + coll.dobj['camera'][cam_label]['dgeom']['extenthalf'][1]
+                        - coll.dobj['camera'][cam_label]['dgeom']['extenthalf'][1]
                         ) <= dsub['dy'] - dsub['yhalfsize']
                     )[0][-1] # Last pixel physically before cutoff
 
@@ -207,7 +207,7 @@ def _build_diag(
         key = diag_label,
         doptics = {cam_label: [cry_label, ap_label]},
         compute = True, # compute LOS
-        compute_vos_from_los = False,
+        compute_vos_from_los = True,
         convex = True,
         config = tf.load_config('SPARC-V0')
         )
