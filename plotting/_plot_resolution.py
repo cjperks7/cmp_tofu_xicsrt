@@ -202,7 +202,7 @@ def _prep_data(
 
     for zz in np.arange(nZ):
         oxi['Z_scan']['data'][:,:,zz] = dxi['zind_%i'%(zz)]['yind_%i'%(midy)]['signal']
-        oxi['Z_scan']['pt'][zz,:] = dxi['zind_%i'%(zz)]['pt']
+        oxi['Z_scan']['pt'][zz,:] = dxi['zind_%i'%(zz)]['yind_%i'%(midy)]['pt']
     oxi['Z_scan']['lambda_AA'] = dxi['zind_%i'%(zz)]['yind_%i'%(midy)]['lamb_AA']
 
     otf['Z_scan'] = {}
@@ -211,27 +211,29 @@ def _prep_data(
 
     for zz in np.arange(nZ):
         otf['Z_scan']['data'][:,:,zz] = dtf['zind_%i'%(zz)]['yind_%i'%(midy)]['signal']
-        otf['Z_scan']['pt'][zz,:] = dtf['zind_%i'%(zz)]['pt']
+        otf['Z_scan']['pt'][zz,:] = dtf['zind_%i'%(zz)]['yind_%i'%(midy)]['pt']
     otf['Z_scan']['lambda_AA'] = dtf['zind_%i'%(zz)]['yind_%i'%(midy)]['lamb_AA']
 
     # Organizes data scanning over wavelength at fixed Z
     oxi['lamb_scan'] = {}
     oxi['lamb_scan']['data'] = np.zeros(dxi['zind_0']['yind_0']['signal'].shape + (ny,)) # dim(horz., vert., nlambda)
     oxi['lamb_scan']['lambda_AA'] = np.zeros(ny)
+    oxi['lamb_scan']['pt'] = np.zeros((ny,)+(3,)) # dim(ny,3)
 
     for yy in np.arange(ny):
         oxi['lamb_scan']['data'][:,:,yy] = dxi['zind_%i'%(midZ)]['yind_%i'%(yy)]['signal']
         oxi['lamb_scan']['lambda_AA'][yy] = dxi['zind_%i'%(midZ)]['yind_%i'%(yy)]['lamb_AA']
-    oxi['lamb_scan']['pt'] = dxi['zind_%i'%(midZ)]['pt']
+        oxi['lamb_scan']['pt'][yy,:] = dxi['zind_%i'%(midZ)]['yind_%i'%(yy)]['pt']
 
     otf['lamb_scan'] = {}
     otf['lamb_scan']['data'] = np.zeros(dtf['zind_0']['yind_0']['signal'].shape + (ny,)) # dim(horz., vert., nlambda)
     otf['lamb_scan']['lambda_AA'] = np.zeros(ny)
+    otf['lamb_scan']['pt'] = np.zeros((ny,)+(3,)) # dim(ny,3)
 
     for yy in np.arange(ny):
         otf['lamb_scan']['data'][:,:,yy] = dtf['zind_%i'%(midZ)]['yind_%i'%(yy)]['signal']
         otf['lamb_scan']['lambda_AA'][yy] = dtf['zind_%i'%(midZ)]['yind_%i'%(yy)]['lamb_AA']
-    otf['lamb_scan']['pt'] = dtf['zind_%i'%(midZ)]['pt']
+        otf['lamb_scan']['pt'] = dtf['zind_%i'%(midZ)]['yind_%i'%(yy)]['pt']
 
     # Finds brightest pixel about mid-point of scan
     oxi['mid'] = {}

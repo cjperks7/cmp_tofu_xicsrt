@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 
 import cmp_tofu_xicsrt.utils as utils
 import cmp_tofu_xicsrt.setup._def_point as dp
+import cmp_tofu_xicsrt.setup as setup
 
 __all__ = [
     'run_mono_pt',
@@ -145,7 +146,7 @@ def _run_mono_pt_xicsrt(
     config = None,
     dpt = None,
     lamb0 = None, # [AA]
-    pt_plt = False,
+    pt_plt = True,
     # Detector mesh
     nx = 256,
     ny = 64,
@@ -171,6 +172,15 @@ def _run_mono_pt_xicsrt(
     vpt /= np.linalg.norm(vpt)
     #print(vpt)
 
+    # Defines the vertical and binormal directions
+    vert = [
+        -1,
+        vpt[0]/vpt[1],
+        0
+        ]
+    vert /= np.linalg.norm(vert)
+    binorm = np.cross(vert, vpt)
+
     # Init
     config['sources'] = {}
     config['sources']['source'] = {} # Only one source is supported at this time
@@ -180,6 +190,22 @@ def _run_mono_pt_xicsrt(
 
     # Source orientation
     config['sources']['source']['zaxis'] = vpt
+    config['sources']['source']['xaxis'] = vert
+    #config['sources']['source']['xaxis'] = binorm
+
+    _, _, _, omega_dl = setup._build_omegas(
+        config = config,
+        box_cent = dpt['ToFu']['point'][:,None,None,None],
+        box_vect = [
+            utils._xicsrt2tofu(vpt),
+            utils._xicsrt2tofu(vert),
+            utils._xicsrt2tofu(binorm)
+            ],
+        )
+    dpt['XICSRT']['dOmega'] = [
+        1.1*np.max(abs(omega_dl[0,:])),
+        1.1*np.max(abs(omega_dl[1,:]))
+        ]
 
     # Source type
     config['sources']['source']['class_name'] = 'XicsrtSourceDirected'

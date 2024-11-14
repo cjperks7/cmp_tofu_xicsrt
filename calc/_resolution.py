@@ -91,10 +91,8 @@ def run_resolution(
 
     # Loop over vertical scan
     for ii, zz in enumerate(dz):
-        print(zz)
         # Loop over spectral scan
         for jj, yy in enumerate(dres['lambs']):
-            print(yy)
             # Get LOS for this wavelength
             dnew = utils._get_tofu_los(
                 coll = coll,

@@ -44,7 +44,7 @@ def _build_omegas(
         optics = list(config['optics'].keys())
 
         for ii, op in enumerate(optics):
-            if op == 'crystal':
+            if op in ['crystal', 'crKr3']:
                 ind = ii
         key_ap = optics[int(ind-1)]
 
@@ -378,6 +378,10 @@ def _rotation_matrix_from_vectors(vec1, vec2):
     :param vec2: A 3d "destination" vector
     :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
     """
+    # Error handling if vectors are too close together
+    if 1-abs(np.dot(vec1,vec2)) < 1e-10:
+        return np.eye(3)
+
     a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
     v = np.cross(a, b)
     c = np.dot(a, b)
