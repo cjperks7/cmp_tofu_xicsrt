@@ -146,7 +146,7 @@ def _run_mono_pt_xicsrt(
     config = None,
     dpt = None,
     lamb0 = None, # [AA]
-    pt_plt = True,
+    pt_plt = False,
     # Detector mesh
     nx = 256,
     ny = 64,
