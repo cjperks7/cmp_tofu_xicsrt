@@ -12,8 +12,11 @@ Nov 9, 2024
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import copy
 
 plt.rcParams.update({'font.size': 16})
+
+import cmp_tofu_xicsrt.plotting as plotting
 
 __all__ = [
     'plt_res'
@@ -28,16 +31,41 @@ __all__ = [
 # Plots spectral-/spatial-resolution data
 def plt_res(
     dout = None,
+    ddata = None, # Prepared data
+    zind = None, # Plotting a particular point source solution
+    yind = None, 
     ):
 
     # Loads data
     if isinstance(dout, str):
         dout = np.load(dout, allow_pickle=True)['arr_0'][()]
 
+    # Plotting a point source solution
+    if zind is not None and yind is not None:
+        dtmp = copy.deepcopy(dout)
+
+        dtmp['XICSRT']['signal'] = dout['XICSRT']['zind_%i'%(zind)]['yind_%i'%(yind)]['signal']
+        dtmp['ToFu']['signal'] = dout['ToFu']['zind_%i'%(zind)]['yind_%i'%(yind)]['signal']
+
+        dpt = {}
+        dpt['ToFu'] = {}
+        dpt['ToFu']['point'] = dout['ToFu']['zind_%i'%(zind)]['yind_%i'%(yind)]['pt']
+        dpt['plotting'] = {}
+        dpt['plotting']['xind'] = None
+
+        # Plots results
+        plotting.plt_mono_pt(
+            lamb0 = dout['ToFu']['zind_%i'%(zind)]['yind_%i'%(yind)]['lamb_AA'],
+            dout = dtmp,
+            dpt = dpt,
+            plt_rc = False,
+            )
+
     # Prepares output data
-    ddata = _prep_data(
-        dout=dout,
-        )
+    if ddata is None:
+        ddata = _prep_data(
+            dout=dout,
+            )
     dxi = ddata['XICSRT']
     dtf = ddata['ToFu']
 
@@ -122,14 +150,21 @@ def plt_res(
     gsz = gridspec.GridSpec(2,1, hspace = 0.4)
 
     # Plots XICSRT
+    #print('XICSRT')
     axz = figz.add_subplot(gsz[0,0])
     for yy in np.arange(dxi['Z_scan']['data'].shape[1]): # loop over vert. pixels
         lab = int(yy - yind_xi)
 
+        if abs(lab) > 1:
+            continue
+        #print(dout['XICSRT']['cents_cm'][0][xind_xi])
+        #print(dout['XICSRT']['cents_cm'][1][yy])
+
         if np.sum(dxi['Z_scan']['data'][xind_xi, yy,:].flatten()) >1e-16:
             axz.plot(
                 dxi['Z_scan']['pt'][:,-1]*100,
-                dxi['Z_scan']['data'][xind_xi,yy,:],
+                #dxi['Z_scan']['data'][xind_xi,yy,:],
+                np.sum(dxi['Z_scan']['data'][:,yy,:], axis=0),
                 '*-',
                 label = 'vert. bin %i'%(lab)
                 )
@@ -144,14 +179,21 @@ def plt_res(
         )
 
     # Plots ToFu
+    #print('ToFu')
     axz = figz.add_subplot(gsz[1,0])
     for yy in np.arange(dtf['Z_scan']['data'].shape[1]): # loop over vert. pixels
         lab = int(yy - yind_tf)
 
+        if abs(lab) > 1:
+            continue
+        #print(dout['ToFu']['cents_cm'][0][xind_tf])
+        #print(dout['ToFu']['cents_cm'][1][yy])
+
         if np.sum(dtf['Z_scan']['data'][xind_tf,yy,:].flatten())*scalet_0 >1e-16:
             axz.plot(
                 dtf['Z_scan']['pt'][:,-1]*100,
-                dtf['Z_scan']['data'][xind_tf,yy,:]*scalet_0,
+                #dtf['Z_scan']['data'][xind_tf,yy,:]*scalet_0,
+                np.sum(dtf['Z_scan']['data'][:,yy,:], axis=0)*scalet_1,
                 '*-',
                 label = 'vert. bin %i'%(lab)
                 )
@@ -164,6 +206,97 @@ def plt_res(
         'ToFu; horz. bin %i/%i'%(xind_tf, dtf['Z_scan']['data'].shape[0]),
         color = 'r'
         )
+
+
+    ####### ---- Calculate the overlap between sptial bins ---- ######
+
+    
+
+    # Slices of the camera image to take
+    cut = 80
+    ztf = np.sum(dtf['Z_scan']['data'], axis=0)*scalet_1 # dim(nvert, nZ)
+    zxi = np.sum(dxi['Z_scan']['data'], axis=0) # dim(nvert, nZ)
+    ztf = ztf[(yind_tf-cut):(yind_tf+cut+1), :] # dim(2*cut+1, nZ)
+    zxi = zxi[(yind_xi-cut):(yind_xi+cut+1), :] # dim(2*cut+1, nZ)
+
+    pixels = np.arange(-cut, +cut)
+
+    # Rebins the vertical pixels if desired
+    rebin = 1
+    M, N = ztf.shape
+    remainder = M % rebin
+    if remainder != 0:
+        padding = rebin - remainder
+        ztf = np.pad(ztf, ((0, padding), (0, 0)), mode='constant', constant_values=0)
+    rtf = ztf.reshape(-1, rebin, N).sum(axis=1) # dim(nbins, nZ)
+
+    M, N = zxi.shape
+    remainder = M % rebin
+    if remainder != 0:
+        padding = rebin - remainder
+        zxi = np.pad(zxi, ((0, padding), (0, 0)), mode='constant', constant_values=0)
+    rxi = zxi.reshape(-1, rebin, N).sum(axis=1) # dim(nbins,nZ)
+
+
+    over_xi = np.zeros(rxi.shape[0]-1) # dim(nbins-1, nZ)
+    over_tf = np.zeros(rtf.shape[0]-1) # dim(nbins-1, nZ)
+
+    from scipy.integrate import simps
+
+    for zz in np.arange(over_xi.shape[0]):
+        #over_xi[zz] = (
+        #    np.sum(zxi[zz,:]*zxi[zz+1,:])
+        #    /np.sum(zxi[zz,:])
+        #    /np.sum(zxi[zz+1,:])
+        #    )
+        #over_tf[zz] = (
+        #    np.sum(ztf[zz,:]*ztf[zz+1,:])
+        #    /np.sum(ztf[zz,:])
+        #    /np.sum(ztf[zz+1,:])
+        #    )
+        over_xi[zz] = (
+            simps(np.minimum(
+                rxi[zz,:], rxi[zz+1,:]
+                ))
+            /0.5/(simps(rxi[zz,:]) + simps(rxi[zz+1,:]))
+            )
+        over_tf[zz] = (
+            simps(np.minimum(
+                rtf[zz,:], rtf[zz+1,:]
+                ))
+            /0.5/(simps(rtf[zz,:]) + simps(rtf[zz+1,:]))
+            )
+
+    
+
+    figo, axo = plt.subplots()
+
+    axo.step(
+        pixels[::rebin],
+        over_tf,
+        label = 'ToFu',
+        color = 'red',
+        where = 'post',
+        )
+    axo.step(
+        pixels[::rebin],
+        over_xi,
+        label = 'XICSRT',
+        color = 'blue',
+        where = 'post',
+        )
+
+    axo.grid('on')
+    axo.set_xlabel('vertical bin')
+    axo.set_ylabel('overlap')
+    axo.set_title('Z scan; binned every %i'%(rebin))
+
+    leg = axo.legend(labelcolor='linecolor')
+    leg.set_draggable('on')
+
+
+    # Output
+    return dout, ddata
 
 
 ###############################################
@@ -236,13 +369,13 @@ def _prep_data(
         otf['lamb_scan']['pt'] = dtf['zind_%i'%(midZ)]['yind_%i'%(yy)]['pt']
 
     # Finds brightest pixel about mid-point of scan
-    oxi['mid'] = {}
-    oxi['mid']['yind'] = np.argmax(
-        np.sum(dxi['zind_%i'%(midZ)]['yind_%i'%(midy)]['signal'], axis = 0)
-        )
-    oxi['mid']['xind'] = np.argmax(
-        np.sum(dxi['zind_%i'%(midZ)]['yind_%i'%(midy)]['signal'], axis = 1)
-        )
+    #oxi['mid'] = {}
+    #oxi['mid']['yind'] = np.argmax(
+    #    np.sum(dxi['zind_%i'%(midZ)]['yind_%i'%(midy)]['signal'], axis = 0)
+    #    )
+    #oxi['mid']['xind'] = np.argmax(
+    #    np.sum(dxi['zind_%i'%(midZ)]['yind_%i'%(midy)]['signal'], axis = 1)
+    #    )
 
     otf['mid'] = {}
     otf['mid']['yind'] = np.argmax(
@@ -251,6 +384,17 @@ def _prep_data(
     otf['mid']['xind'] = np.argmax(
         np.sum(dtf['zind_%i'%(midZ)]['yind_%i'%(midy)]['signal'], axis = 1)
         )
+
+    cent_tf_0 = dtf['cents_cm'][0][otf['mid']['xind']]
+    cent_tf_1 = dtf['cents_cm'][1][otf['mid']['yind']]
+
+    oxi['mid'] = {}
+    oxi['mid']['xind'] = np.argmin(abs(
+        dxi['cents_cm'][0] - cent_tf_0
+        ))
+    oxi['mid']['yind'] = np.argmin(abs(
+        dxi['cents_cm'][1] - cent_tf_1
+        ))
 
     # Output
     return ddata

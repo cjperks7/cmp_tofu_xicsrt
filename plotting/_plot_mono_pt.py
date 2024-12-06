@@ -31,8 +31,6 @@ __all__ = [
 
 # Plots point source results
 def plt_mono_pt(
-    coll = None,
-    key_diag = None,
     cry_shape = 'Spherical',
     lamb0 = None, # [AA]
     dout = None,
