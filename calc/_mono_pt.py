@@ -148,8 +148,10 @@ def _run_mono_pt_xicsrt(
     lamb0 = None, # [AA]
     pt_plt = False,
     # Detector mesh
-    nx = 256,
-    ny = 64,
+    #nx = 256,
+    #ny = 64,
+    nx = 1028,
+    ny = 1062
     ):
 
     # Init

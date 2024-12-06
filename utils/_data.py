@@ -52,7 +52,7 @@ def _add_det_data(
         )
 
     # Aspect ratio of detector
-    dout['aspect'] = out0.max()/out1.max()
+    dout['aspect'] = (out0.max()-out0.min())/(out1.max()-out1.min())
 
     # Pixel centers
     dout['cents_cm'] = [
