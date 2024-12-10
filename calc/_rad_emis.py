@@ -131,7 +131,7 @@ def _run_rad_emis_xicsrt(
             dvol = dvol,
             dHPC = dHPC,
             calc_signal = True,
-            lamb0 = ll
+            lamb0 = ll,
             demis = demis,
             case = 'me',
             )

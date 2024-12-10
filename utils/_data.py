@@ -142,6 +142,7 @@ def _add_mesh_data(
     R_knots = None,
     Z_knots = None,
     lamb = None, 
+    rhop_RZ = None,
     ):
 
     # If just want to consider a "square O-ring" shaped plasma
@@ -204,7 +205,7 @@ def _add_mesh_data(
         # Defines flux surfaces
         coll.add_data(
             key='rhop2d',
-            data= np.sqrt(emis['plasma']['PSIN_RZ']['data']),
+            data= rhop_RZ,
             ref=('m0_bs1')
             )
 

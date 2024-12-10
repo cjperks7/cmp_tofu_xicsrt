@@ -10,6 +10,7 @@ Aug 5th, 2024
 # Modules
 import numpy as np
 from scipy.interpolate import griddata
+import tofu as tf
 
 import cmp_tofu_xicsrt.utils as utils
 
@@ -212,6 +213,7 @@ def _prep_emis_tofu(
         R_knots=R_knots,
         Z_knots=Z_knots,
         lamb=emis[key_diag]['lambda']['data'][::fact], # [AA]
+        rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data'])
         )
 
     ########### ----- Add emissivity data ------ ############

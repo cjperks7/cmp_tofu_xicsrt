@@ -41,7 +41,7 @@ dHPC = {
     'num_rays': 1e5,# (20G) 1e8 (100G)
     'nlamb': nlamb,
     'lamb_lim': lamb_lim,
-    'lamb_num': int(sys.argv[1]/job_max_vol),   # Which wavelength group
+    'lamb_num': int(int(sys.argv[1])/job_max_vol),   # Which wavelength group
     }
 
 # Save controls
@@ -76,7 +76,7 @@ dout, coll = utils.main(
     key_cam = key_cam,
     cry_shape = cry_shape,
     # Multi-energy, volumetric source controls
-    rad_run = False,
+    rad_run = True,
     dvol = None,
     # HPC controls
     run_tofu = run_tofu,
