@@ -194,8 +194,10 @@ def _save(
         name += '_lamb%1.5fAA'%(lamb0)
     if key_diag is not None:
         name += '_'+key_diag
-    if case in ['mv', 'me']:
+    if case in ['mv', 'me', 'emis']:
         name += '_job%i'%(dHPC['job_num'])
+    if case in ['emis']:
+        name += '_ygroup%i'%(dHPC['lamb_num'])
     name += '.npz'
 
     # Saves XICSRT results

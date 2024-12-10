@@ -21,21 +21,27 @@ key_diag = 'XRSHRKr'
 
 cry_shape = 'Cylindrical'
 key_cam = 'e1M3_'+key_diag
-emis_file = = os.path.join(
+emis_file = os.path.join(
     '/home/cjperks',
     'cmp_tofu_xicsrt/emis',
     key_diag+'.npz'
     )
 
 # HPC controls
+lamb_lim = 100 # Maximum number of wavelengths in the mesh to run in one job
+nlamb = 600
+njob_lamb = int(nlamb/lamb_lim)
+
+job_max_vol = 34+1
+
 dHPC = {
     'job_axis': ['vert' ,'binorm'],
-    'job_num': int(sys.argv[1]),
-    'job_max': 34, # Pythonic, 0,...,jm
-    #'job_axis': ['vert'],
-    #'job_num': int(sys.argv[1]),
-    #'job_max': 12,
-    'num_rays': 1e5# (20G) 1e8 (100G)
+    'job_num': int(sys.argv[1])%(job_max_vol),    # Which volume group
+    'job_max': int(job_max_vol-1), # Pythonic, 0,...,jm
+    'num_rays': 1e5,# (20G) 1e8 (100G)
+    'nlamb': nlamb,
+    'lamb_lim': lamb_lim,
+    'lamb_num': int(sys.argv[1]/job_max_vol),   # Which wavelength group
     }
 
 # Save controls
@@ -79,3 +85,6 @@ dout, coll = utils.main(
     dsave = dsave,
     )
 
+end_time = time.time()
+dt = end_time - start_time
+print(f"Elapsed time: {dt} seconds")

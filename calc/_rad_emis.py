@@ -53,7 +53,7 @@ def run_rad_emis(
         key_diag = key_diag,
         key_cam = key_cam,
         emis_file=emis_file,
-        #nlamb = 500,
+        nlamb = dHPC['nlamb'],
         )
 
     # Runs XICSRT
@@ -82,7 +82,7 @@ def run_rad_emis(
             key_diag = key_diag,
             dsave = dsave,
             dHPC=dHPC,
-            case = 'me',
+            case = 'emis',
             )
     
     # Output
@@ -107,7 +107,9 @@ def _run_rad_emis_xicsrt(
 
     # Init
     dout = {}
-    lamb = coll.ddata['lamb_'+key_diag]['data']
+    lamb_lim = dHPC['lamb_lim']
+    lamb_num = dHPC['lamb_num']     # Takes this specfic wavelength group
+    lamb = coll.ddata['lamb_'+key_diag]['data'][lamb_num*lamb_lim:(lamb_num+1)*lamb_lim]
 
     # Loop over wavelength
     for ii,ll in enumerate(lamb):
