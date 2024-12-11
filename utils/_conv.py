@@ -115,12 +115,19 @@ def _get_tofu_los(
         indy = int(lamb.shape[1]/2-1) # Takes midline
         #indx = np.nanargmin(abs(lamb0*1e-10 - lamb[:,indy]))
 
+        # Error handling
+        if np.all(lamb0*1e-10 <= lamb[:,indy][~np.isnan(lamb[:,indy])]):
+            indx_up = np.nanargmin(lamb[:,indy])
+            indx_down = np.nanargmin(lamb[:,indy])
+        elif np.all(lamb0*1e-10 >= lamb[:,indy][~np.isnan(lamb[:,indy])]):
+            indx_up = np.nanargmax(lamb[:,indy])
+            indx_down = np.nanargmax(lamb[:,indy])  
         # If array is monotonically decreasing
-        if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) <0:
+        elif np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) <0:
             indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][-1] # last greater number
             indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][0] # first smaller number
         # If array is monotonically increasing
-        if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) >0:
+        elif np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) >0:
             indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][0] # first greater number
             indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][-1] # last smaller number
 
@@ -137,12 +144,19 @@ def _get_tofu_los(
                 #res = abs(
                 #    ptsz[-1,indx,yy] - np.nanmean(pcross1)
                 #    )
+                # Error handling
+                if np.all(lamb0*1e-10 <= lamb[:,indy][~np.isnan(lamb[:,indy])]):
+                    indx_up = np.nanargmin(lamb[:,indy])
+                    indx_down = np.nanargmin(lamb[:,indy])
+                elif np.all(lamb0*1e-10 >= lamb[:,indy][~np.isnan(lamb[:,indy])]):
+                    indx_up = np.nanargmax(lamb[:,indy])
+                    indx_down = np.nanargmax(lamb[:,indy])
                 # If array is monotonically decreasing
-                if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) <0:
+                elif np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) <0:
                     indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][-1] # last greater number
                     indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][0] # first smaller number
                 # If array is monotonically increasing
-                if np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) >0:
+                elif np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) >0:
                     indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][0] # first greater number
                     indx_low = np.where(lamb[:,indy]<=lamb0*1e-10)[0][-1] # last smaller number
 
@@ -172,7 +186,10 @@ def _get_tofu_los(
         ptsx[-2,indx_low,indy], ptsy[-2,indx_low,indy], ptsz[-2,indx_low,indy]
         ] # Inboard wall
 
-    ratio = (lamb0*1e-10 - lamb[indx_low,indy])/(lamb[indx_up,indy] - lamb[indx_low,indy])
+    if indx_up != indx_low:
+        ratio = (lamb0*1e-10 - lamb[indx_low,indy])/(lamb[indx_up,indy] - lamb[indx_low,indy])
+    else:
+        ratio = 0.0
     p_in = p_in_low + ratio *(p_in_up-p_in_low)
     p_cry = p_cry_low + ratio *(p_cry_up-p_cry_low)
 

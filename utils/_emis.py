@@ -154,6 +154,7 @@ def _prep_emis_xicsrt(
     key_diag = None,
     ilamb = None,
     dlamb = None,
+    nlamb = None,
     ):
 
     # Output
