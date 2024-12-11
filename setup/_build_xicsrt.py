@@ -282,6 +282,7 @@ def _build_source(
     omega_vert = None,      # [vector], dim(x,y,z) ToFu basis
     omega_binorm = None,    # [vector], dim(x,y,z) ToFu basis
     omega_dl = None,        # [rad], list[vert, birnorm]
+    key_ap = None,
     dHPC = None,
     add_velocity = False,
     dvel = None,
@@ -331,7 +332,7 @@ def _build_source(
     #config_out['sources']['source']['direction'] = utils._tofu2xicsrt(
     #    data = omega_norm
     #    )
-    config_out['sources']['source']['target'] = config['optics']['ap']['origin']
+    config_out['sources']['source']['target'] = config['optics'][key_ap]['origin']
 
     # If adding Doppler shift
     if add_velocity:

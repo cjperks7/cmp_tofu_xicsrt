@@ -264,12 +264,13 @@ def _build_boxes(
 
     # Central box on magnetic axis
     #C0 = tmps[:,ind_r]
-    C0 = dlos['mag_axis']
+    C0 = dlos['los_mag_axis']
     
     # Vector basis
     #vn = mid_v
     vn = dlos['los_vect']
-    vz = np.r_[0,0,1]
+    vz = np.r_[0, 1, -1*vn[1]/vn[2]]
+    vz /= np.linalg.norm(vz)
     vb = np.cross(vz,vn)
 
     # Step controls

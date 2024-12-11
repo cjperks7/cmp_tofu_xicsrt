@@ -118,10 +118,10 @@ def _get_tofu_los(
         # Error handling
         if np.all(lamb0*1e-10 <= lamb[:,indy][~np.isnan(lamb[:,indy])]):
             indx_up = np.nanargmin(lamb[:,indy])
-            indx_down = np.nanargmin(lamb[:,indy])
+            indx_low = np.nanargmin(lamb[:,indy])
         elif np.all(lamb0*1e-10 >= lamb[:,indy][~np.isnan(lamb[:,indy])]):
             indx_up = np.nanargmax(lamb[:,indy])
-            indx_down = np.nanargmax(lamb[:,indy])  
+            indx_low = np.nanargmax(lamb[:,indy])  
         # If array is monotonically decreasing
         elif np.nanmean(lamb[:,indy][1:]-lamb[:,indy][:-1]) <0:
             indx_up = np.where(lamb[:,indy]>lamb0*1e-10)[0][-1] # last greater number

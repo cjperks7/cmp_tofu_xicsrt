@@ -128,6 +128,10 @@ def _run_mono_vol_xicsrt(
         box_vect = box_vect,
         )
 
+    # Aperture key
+    doptics = coll.dobj['diagnostic'][key_diag]['doptics']
+    key_ap = doptics[key_cam]['optics'][1:][0]
+
     # Partition simulation volume over job arrays
     dout = _loop_volumes_HPC(
         config = config,
@@ -141,6 +145,7 @@ def _run_mono_vol_xicsrt(
         omega_vert = omega_vert,
         omega_binorm = omega_binorm,
         omega_dl = omega_dl,
+        key_ap = key_ap,
         # HPC controls
         dHPC = dHPC,
         calc_signal = calc_signal,
@@ -262,6 +267,7 @@ def _loop_volumes_HPC(
     omega_vert = None,      # [vector], dim(3,nnorm,nvert,nbinorm), ToFu basis  
     omega_binorm = None,    # [vector], dim(3,nnorm,nvert,nbinorm), ToFu basis
     omega_dl = None,        # [rad], list[vert,binorm]
+    key_ap = None,
     # HPC controls
     dHPC = None,
     calc_signal = None,
@@ -353,6 +359,7 @@ def _loop_volumes_HPC(
             omega_vert = omega_vert[:,inds[0,ii], inds[1,ii], inds[2,ii]],
             omega_binorm = omega_binorm[:,inds[0,ii], inds[1,ii], inds[2,ii]],
             omega_dl = omega_dl,
+            key_ap = key_ap,
             dHPC = dHPC,
             add_velocity = add_velocity,
             dvel = dvel,
