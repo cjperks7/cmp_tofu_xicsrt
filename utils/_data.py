@@ -238,5 +238,15 @@ def _add_mesh_data(
             units = 'm'
             )
 
+        '''
+        # Adds data to collection object
+        coll.add_mesh_1d(
+            key='mlamb',
+            knots=lamb*1e-10,
+            deg=1,
+            units='m',
+            )
+        '''
+
     # Output
     return coll

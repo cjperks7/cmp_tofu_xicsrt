@@ -204,6 +204,13 @@ def _prep_emis_tofu(
     # Number of points to skip on fine wavelength mesh
     fact = int(emis[key_diag]['emis']['data'].shape[-1]/nlamb)
 
+    # Ensures wavelength data is monotonically increasing
+    lamb = emis[key_diag]['lambda']['data'][::fact]
+    flip = False
+    if np.mean(lamb[1:]-lamb[:-1])<0:
+        lamb = np.flip(lamb)
+        flip = True
+
     # Adds mesh data
     coll = utils._add_mesh_data(
         coll=coll,
@@ -213,7 +220,7 @@ def _prep_emis_tofu(
         case='rad_emis',
         R_knots=R_knots,
         Z_knots=Z_knots,
-        lamb=emis[key_diag]['lambda']['data'][::fact], # [AA]
+        lamb = lamb, # [AA]
         rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data'])
         )
 
@@ -233,6 +240,9 @@ def _prep_emis_tofu(
         RR_asym=emis['plasma']['rhop_contours']['R']['data'], # dim(fm_rhop, fm_theta),
         ZZ_asym=emis['plasma']['rhop_contours']['Z']['data'], # dim(fm_rhop, fm_theta)
         ) # dim(mesh_R, mesh_Z, nlamb)
+
+    if flip:
+        emis2d_tmp_m0 = np.flip(emis2d_tmp_m0, axis=-1)
 
     # Add emissivity data
     coll.add_data(
