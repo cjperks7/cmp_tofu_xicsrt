@@ -213,6 +213,10 @@ def _run_mono_vol_tofu(
         # Saves data
         dout['signal'] = sig/(4*np.pi)*1e6 # dim(nx,ny), [cm^3]
         #dout['dvos'] = dvos[key_cam]
+    else:
+        dout['signal'] = np.zeros(
+            dvos[key_cam]['ph']['data'].shape[0:2]
+            )
 
     # extract keys to R, Z coordinates of polygon definign vos in poloidal cross-section
     pcross0, pcross1 = tf.data._class8_vos_utilities._get_overall_polygons(

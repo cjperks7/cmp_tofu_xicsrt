@@ -172,7 +172,9 @@ def _run_rad_emis_tofu(
         key_diag = key_diag,
         key_cam = key_cam,
         key_mesh = 'm0',
-        lamb_vec = coll.ddata['lamb_'+key_diag]['data']
+        lamb_vec = coll.ddata['lamb_'+key_diag]['data'],
+        n0 = 301,
+        n1 = 151,
         )
 
     # Computes signal with emissivity
