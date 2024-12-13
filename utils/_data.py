@@ -226,6 +226,7 @@ def _add_mesh_data(
 
         ########### ----- Add wavelength mesh ------ ############
 
+        '''
         # Defines wavelenth domain
         coll.add_ref(
             key='nlamb_'+key_diag,
@@ -237,16 +238,15 @@ def _add_mesh_data(
             ref='nlamb_'+key_diag,
             units = 'm'
             )
-
         '''
+
         # Adds data to collection object
         coll.add_mesh_1d(
-            key='mlamb',
+            key='mlamb_'+key_diag,
             knots=lamb*1e-10,
             deg=1,
             units='m',
             )
-        '''
 
     # Output
     return coll

@@ -248,7 +248,7 @@ def _prep_emis_tofu(
     coll.add_data(
         key='emis_'+key_diag,
         data=emis2d_tmp_m0,
-        ref=('m0_bs1','nlamb_'+key_diag),
+        ref=('m0_bs1','mlamb_'+key_diag+'_bs1'),
         units='ph/s/m3/sr/m',
         )
 
