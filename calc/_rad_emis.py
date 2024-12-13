@@ -109,7 +109,7 @@ def _run_rad_emis_xicsrt(
     dout = {}
     lamb_lim = dHPC['lamb_lim']
     lamb_num = dHPC['lamb_num']     # Takes this specfic wavelength group
-    lamb = coll.ddata['lamb_'+key_diag]['data'][lamb_num*lamb_lim:(lamb_num+1)*lamb_lim]*1e10 # [AA]
+    lamb = coll.ddata['mlamb_'+key_diag+'_k']['data'][lamb_num*lamb_lim:(lamb_num+1)*lamb_lim]*1e10 # [AA]
 
     # Loop over wavelength
     for ii,ll in enumerate(lamb):
@@ -175,7 +175,7 @@ def _run_rad_emis_tofu(
         key_diag = key_diag,
         key_cam = key_cam,
         key_mesh = 'm0',
-        lamb_vec = coll.ddata['lamb_'+key_diag]['data'],
+        lamb_vec = coll.ddata['mlamb_'+key_diag+'_k']['data'],
         n0 = 301,
         n1 = 151,
         )

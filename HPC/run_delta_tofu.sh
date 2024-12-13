@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=XICSRT
+#SBATCH --job-name=TOFU
 #SBATCH -C rocky8
 #SBATCH --array=0
 #SBATCH --time=08:00:00
