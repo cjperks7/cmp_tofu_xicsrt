@@ -113,6 +113,9 @@ def _run_rad_emis_xicsrt(
 
     # Loop over wavelength
     for ii,ll in enumerate(lamb):
+        print('Lamb step')
+        print(ii)
+        print(ll)
         # Prepares emissivity data for XICSRT
         demis = utils._prep_emis_xicsrt(
             coll = coll,
