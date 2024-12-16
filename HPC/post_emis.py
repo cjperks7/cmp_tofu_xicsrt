@@ -14,7 +14,7 @@ import cmp_tofu_xicsrt.utils as utils
 
 # Folder to mv results
 fol = os.path.join(
-    '/nobackup1/cjperks/work
+    '/nobackup1/cjperks/work',
     'cmp_tofu_xicsrt/HPC',
     'output'
     )
@@ -29,7 +29,8 @@ ddata = utils._get_mv_results(
     folder_xi = fol_xi,
     folder_tf = fol_tf,
     name = name,
-    case = 'me'
+    case = 'me',
+    save_all = False,
     )
 
 # Saves data

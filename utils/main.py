@@ -11,6 +11,7 @@ Mar 19th, 2024
 # Modules
 import os, sys
 import numpy as np
+import copy
 
 import cmp_tofu_xicsrt.calc as calc
 import cmp_tofu_xicsrt.setup as setup
@@ -210,6 +211,7 @@ def _get_mv_results(
     folder_tf = None,
     name = None,
     case = 'mv',
+    save_all = True,
     ):
     from cmp_tofu_xicsrt.utils import _conv as cv
 
@@ -241,17 +243,20 @@ def _get_mv_results(
             dxi['signal'] = np.zeros(dxi[key]['signal'].shape)
 
             if 'voxels' in dxi[key].keys():  ############### Temporary version control fix
-                dxi['voxels'] = dxi[key]['voxels']
-            dxi['extent'] = dxi[key]['extent']
-            dxi['aspect'] = dxi[key]['aspect']
-            dxi['cents_cm'] = dxi[key]['cents_cm']
-            dxi['npix'] = dxi[key]['npix']
+                dxi['voxels'] = copy.deepcopy(dxi[key]['voxels'])
+            dxi['extent'] = copy.deepcopy(dxi[key]['extent'])
+            dxi['aspect'] = copy.deepcopy(dxi[key]['aspect'])
+            dxi['cents_cm'] = copy.deepcopy(dxi[key]['cents_cm'])
+            dxi['npix'] = copy.deepcopy(dxi[key]['npix'])
             if case == 'me':
-                dxi['lambda_AA'] = dxi[key]['lambda_AA']
+                dxi['lambda_AA'] = copy.deepcopy(dxi[key]['lambda_AA'])
                 dxi['dispersion'] = np.zeros(dxi[key]['signal'].shape +dxi[key]['lambda_AA'].shape)
         dxi['signal'] += dxi[key]['signal']
         if case == 'me':
             dxi['dispersion'] += dxi[key]['dispersion']
+
+        if not save_all:
+            del dxi[key]
 
     # Loads ToFu data
     tf_fils = [f for f in os.listdir(folder+'/'+folder_tf) if f.startswith(name)] 
