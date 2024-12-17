@@ -103,6 +103,9 @@ def _run_rad_emis_xicsrt(
     config = None,
     dvol = None,
     dHPC = None,
+    # Histogram size
+    nx = 1028,
+    ny = 1062,
     ):
 
     # Init
@@ -120,9 +123,10 @@ def _run_rad_emis_xicsrt(
         demis = utils._prep_emis_xicsrt(
             coll = coll,
             key_diag = key_diag,
-            ilamb = ii,
+            ilamb = ii + lamb_num*lamb_lim,
+            #ilamb = np.nanargmin(abs(coll.ddata['mlamb_'+key_diag+'_k']['data'] - ll*1e-10)),
             dlamb = np.mean(abs(lamb[1:]-lamb[:-1])), # [AA]
-            nlamb = len(lamb),
+            nlamb = len(coll.ddata['mlamb_'+key_diag+'_k']['data']),
             )
 
         # Calculates VOS-int per wavelength
@@ -137,6 +141,8 @@ def _run_rad_emis_xicsrt(
             lamb0 = ll, # [AA]
             demis = demis,
             case = 'me',
+            nx = nx,
+            ny = ny,
             )
 
         # Performs wavelength integration
@@ -168,7 +174,7 @@ def _run_rad_emis_tofu(
     key_cam = None,
     ):
 
-
+    '''
     # Computes VOS
     _, coll = mv._run_mono_vol_tofu(
         coll = coll,
@@ -179,7 +185,8 @@ def _run_rad_emis_tofu(
         n0 = 301,
         n1 = 151,
         )
-
+    '''
+    #coll.save(path='/home/cjperks/test')
     # Computes signal with emissivity
     dsig = coll.compute_diagnostic_signal(
         key='flux_vos_'+key_diag,
@@ -187,8 +194,10 @@ def _run_rad_emis_tofu(
         key_cam=[key_cam],
         key_integrand='emis_'+key_diag,
         key_ref_spectro=None,
-        method='vos',
-        res=None,
+        #method='vos',
+        #res=None,
+        method='los',
+        res=0.001,
         mode=None,
         groupby=None,
         val_init=None,

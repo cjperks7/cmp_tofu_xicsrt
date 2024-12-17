@@ -43,6 +43,9 @@ def run_mono_vol(
     run_tofu = True,
     dHPC = None,
     dsave = None,
+    # Detector settings
+    nx = 1028,
+    ny = 1062,
     ):
 
     # Init
@@ -64,7 +67,9 @@ def run_mono_vol(
             config = config,
             dvol = dvol,
             dHPC = dHPC,
-            lamb0 = lamb0
+            lamb0 = lamb0,
+            nx = nx,
+            ny = ny,
             )
 
     # Runs ToFu
@@ -110,6 +115,9 @@ def _run_mono_vol_xicsrt(
     lamb0 = None,
     demis = None,
     case = 'mv',
+    # Detector settings
+    nx = 1028,
+    ny = 1062,
     ):
 
     # Builds box spatial distribution
@@ -151,6 +159,9 @@ def _run_mono_vol_xicsrt(
         calc_signal = calc_signal,
         demis = demis,
         case = case,
+        # Detector settings
+        nx = nx,
+        ny = ny,
         )
 
     if calc_signal:
@@ -281,6 +292,9 @@ def _loop_volumes_HPC(
     # Local emissivity controls
     demis = None,
     case = 'mv',
+    # Detector settings
+    nx = 1028,
+    ny = 1062,
     ):
 
     # Determines how to index the VOS
@@ -350,6 +364,7 @@ def _loop_volumes_HPC(
         if np.isnan(np.mean(box_cent[:,inds[0,ii], inds[1,ii], inds[2,ii]])):
             continue
         else:
+            print('Looped voxel index')
             print(ii)
 
         # Builds source at this voxel
@@ -431,6 +446,8 @@ def _loop_volumes_HPC(
                 box_cent = box_cent[:,inds[0,ii], inds[1,ii], inds[2,ii]],
                 det_origin = results['found']['history']['detector']['origin'],
                 case = case,
+                nx = nx,
+                ny = ny,
                 )
 
     '''

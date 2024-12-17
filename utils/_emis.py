@@ -63,6 +63,8 @@ def _calc_signal(
     dlamb = 1,
     ilamb = None,
     nlamb = None,
+    nx = 1028,
+    ny = 1062,
     ):
 
     # If local emissivity data given
@@ -90,6 +92,8 @@ def _calc_signal(
     dhist = utils._calc_det_hist(
         rays = det_origin,
         config = config,
+        nx = nx,
+        ny = ny
         ) # dim(hor_pix, vert_pix)
     # wavelength-integration (via left-hand Riemann sum)
     if 'signal' not in dout.keys():
