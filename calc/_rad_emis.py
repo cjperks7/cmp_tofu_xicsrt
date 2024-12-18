@@ -140,7 +140,8 @@ def _run_rad_emis_xicsrt(
             calc_signal = True,
             lamb0 = ll, # [AA]
             demis = demis,
-            case = 'me',
+            #case = 'me',
+            case = 'mv',
             nx = nx,
             ny = ny,
             )
@@ -151,9 +152,9 @@ def _run_rad_emis_xicsrt(
         dout['signal'] += tmp['signal']
 
         # Includes dispersion
-        if 'dispersion' not in dout.keys():
-            dout['dispersion'] = np.zeros(tmp['dispersion'].shape)
-        dout['dispersion'] += tmp['dispersion']
+        #if 'dispersion' not in dout.keys():
+        #    dout['dispersion'] = np.zeros(tmp['dispersion'].shape)
+        #dout['dispersion'] += tmp['dispersion']
 
     # Stores detector configuration
     dout = utils._add_det_data(

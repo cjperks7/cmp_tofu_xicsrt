@@ -84,6 +84,10 @@ def _calc_signal(
             (box_R, box_Z),
             method='linear') # dim(scalar); [ph/s/cm3/AA]
 
+        # Error check
+        if np.isnan(emis_val):
+            emis_val = 0.0
+
         dlamb = demis['dlamb'] # dim(scalar); [AA]
         nlamb = demis['nlamb']
         ilamb = demis['ilamb']
