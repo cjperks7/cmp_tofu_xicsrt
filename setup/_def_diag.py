@@ -40,6 +40,14 @@ def get_dap(option=None):
             'outline_x0': np.r_[-5.e-05,  5.e-05,  5.e-05, -5.e-05],
             'outline_x1': np.r_[-0.0125, -0.0125,  0.0125,  0.0125],
             },
+        'XRSLR':{ # slit13
+            'cent': np.r_[14.2       , -1.61802349,  0.018     ],
+            'nin': np.r_[-0.98966998,  0.14336434,  0.        ],
+            'e0': np.r_[-0.14336434, -0.98966998, -0.        ],
+            'e1': np.r_[ 0., -0.,  1.],
+            'outline_x0': np.r_[-5.e-05,  5.e-05,  5.e-05, -5.e-05],
+            'outline_x1': np.r_[-0.0125, -0.0125,  0.0125,  0.0125],
+            },
         'XRSHRXe':{ # slit23
             'cent': np.r_[14.2       , -1.61802349,  -0.012     ],
             'nin': np.r_[-0.98966998,  0.14336434,  0.        ],
@@ -94,6 +102,14 @@ def get_cry_dgeom(option=None):
             'extenthalf': np.r_[0.04, 0.014/0.6], # [m, rad]
             'curve_r': np.r_[np.inf, 0.6], # radius of curvature in plane (e0, e1) & nin --> thus cylinder axis (e0,e1)\cross nin
             },
+        'XRSLR':{
+            'cent': np.r_[18.5, -2.24092473, 0.018],
+            'nin': np.r_[-0.26820408,  0.96336212,  0.],
+            'e0': np.r_[0.96336212, 0.26820408, 0.],
+            'e1': e1,
+            'extenthalf': np.r_[0.04/0.6, 0.014], # [m, rad]
+            'curve_r': np.r_[0.6, np.inf], # radius of curvature in plane (e0, e1) & nin --> thus cylinder axis (e0,e1)\cross nin
+            },
         'XRSHRXe':{
             'cent': np.r_[18.5, -2.24092473, -0.012],
             'nin': np.r_[-0.2715988 ,  0.96241056,  0.],
@@ -121,6 +137,12 @@ def get_cry_dmat(option=None):
             'material': 'Germanium',
             'miller': np.r_[2., 4., 2.],
             'name': 'Ge242',
+            'target': {'lamb': 0}
+            },
+        'XRSLR':{
+            'material': 'Germanium',
+            'miller': np.r_[2., 0., 2.],
+            'name': 'Ge202',
             'target': {'lamb': 0}
             },
         'XRSHRXe':{
@@ -198,6 +220,13 @@ def get_dsubcam(option=None):
             'xhalfsize': 75e-5/2, # [m]
             'dy': 0.0305,             # [m], Move vertically
             'yhalfsize': 0.01,       # [m]
+            'method': 'zoom'
+            },
+        'XRSLR':{ # lamb0 = 1.492 AA
+            'dx': 0.02454,       # [m], Move horizontally
+            'xhalfsize': 75e-5/2, # [m]
+            'dy': 0.0,             # [m], Move vertically
+            'yhalfsize': 0.02,       # [m]
             'method': 'zoom'
             },
         'XRSHRXe':{ # lamb0 = 2.72 AA

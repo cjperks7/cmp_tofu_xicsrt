@@ -98,6 +98,26 @@ def get_dpt(
                 'xind': None,
                 }
             },
+        'XRSLR': {
+            'ToFu':{
+                #'point': np.r_[1.89106408, 0.14276134, 0.01514425],
+                'point': np.r_[1.88426746, 0.18974718, 0.01829594],
+                #'point': np.r_[1.88843169, 0.15496111, 0.10381247],
+                'n0': 5001,#10001,
+                'n1': 5001,#10001,
+                'plt': False,
+                },
+            'XICSRT':{
+                'intensity': 2e6,
+                'dOmega': [
+                    0.0011,     # height 
+                    0.000018     # width
+                    ] # [rad]
+                },
+            'plotting':{
+                'xind': None,
+                }
+            },
         }
 
     # Output
