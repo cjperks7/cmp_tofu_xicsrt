@@ -72,6 +72,7 @@ def _build_diag(
     lamb0 = None,
     subcam = None,
     doptics = None,
+    ext_label = '',
     ):
 
     # Labeling
@@ -134,10 +135,16 @@ def _build_diag(
         dcam = dd.get_dcam(option=cam_option)
 
     # Adds camera
-    coll.add_camera_2d(
-        key = cam_label,
-        dgeom = dcam 
-        )
+    common = False # Avoid common camera
+    if 'camera' in coll.dobj.keys():
+        if cam_label in coll.dobj['camera'].keys(): 
+            common = True
+
+    if not common:
+        coll.add_camera_2d(
+            key = cam_label,
+            dgeom = dcam 
+            )
 
     # Takes a subset of the camera area if requested
     if subcam is not None:
@@ -222,7 +229,7 @@ def _build_diag(
 
     # Builds diagnostic
     coll.add_diagnostic(
-        key = diag_label,
+        key = diag_label + ext_label,
         doptics = {cam_label: [cry_label, ap_label]},
         compute = True, # compute LOS
         compute_vos_from_los = True,
