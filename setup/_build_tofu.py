@@ -16,7 +16,8 @@ import cmp_tofu_xicsrt.setup._def_diag as dd
 import cmp_tofu_xicsrt.utils as utils
 
 __all__ = [
-    '_init_diag'
+    '_init_diag',
+    '_build_diag',
     ]
 
 #################################################
@@ -63,6 +64,7 @@ def _init_diag(
 
 # Script to build diagnostic in ToFu
 def _build_diag(
+    coll = None,
     dap = None,
     dcry = None,
     dmat = None,
@@ -100,7 +102,8 @@ def _build_diag(
         diag_label = 'valid'
 
     # Init
-    coll = tf.data.Collection()
+    if coll is None:
+        coll = tf.data.Collection()
 
     # Gets default aperture geometry
     if dap is None:
@@ -113,7 +116,7 @@ def _build_diag(
         )
 
     # Gets dafault crystal geometry
-    if isinstance(cry_option, str):
+    if dcry is None:
         dcry = dd.get_cry_dgeom(option=cry_option)
     if dmat is None:
         dmat = dd.get_cry_dmat(option=mat_option)
@@ -138,24 +141,39 @@ def _build_diag(
 
     # Takes a subset of the camera area if requested
     if subcam is not None:
-        dsub = dd.get_dsubcam(option=subcam)
+        if isinstance(subcam, str):
+            dsub = dd.get_dsubcam(option=subcam)
+        elif isinstance(subcam, dict):
+            dsub = subcam
 
         # If user wants to look at a section of the detector in a finer pixel mesh
         if dsub['method'] == 'refine':
             if dsub['dx'] is not None:
-                dcam['cent'] += dcam['e0']*dsub['dx']
-                nx0 = len(dcam['cents_x0'])
+                #dcam['cent'] += dcam['e0']*dsub['dx']
+                if 'nx0' not in dsub.keys():
+                    nx0 = len(dcam['cents_x0'])
+                else:
+                    nx0 = dsub['nx0']
                 pix_width = 2*dsub['xhalfsize']/(nx0-1)
 
                 dcam['outline_x0'] = 0.5* pix_width * np.r_[-1, 1, 1, -1]
-                dcam['cents_x0'] = dsub['xhalfsize'] * np.linspace(-1, 1, nx0)
+                dcam['cents_x0'] = (
+                    dsub['xhalfsize'] * np.linspace(-1, 1, nx0) 
+                    + np.sum(dcam['e0']*dsub['dx'])
+                    )
             if dsub['dy'] is not None:
-                dcam['cent'] += dcam['e1']*dsub['dy']
-                nx1 = len(dcam['cents_x1'])
+                #dcam['cent'] += dcam['e1']*dsub['dy']
+                if 'nx1' not in dsub.keys():
+                    nx1 = len(dcam['cents_x1'])
+                else:
+                    nx1 = dsub['nx1']
                 pix_height = 2*dsub['yhalfsize']/(nx1-1)
 
                 dcam['outline_x1'] = 0.5* pix_height * np.r_[-1, -1, 1, 1]
-                dcam['cents_x1'] = dsub['yhalfsize'] * np.linspace(-1, 1, nx1)
+                dcam['cents_x1'] = (
+                    dsub['yhalfsize'] * np.linspace(-1, 1, nx1) 
+                    + np.sum(dcam['e1']*dsub['dy'])
+                    )
 
         # If user wants to zoom into a section of the detector on the same pixel mesh
         elif dsub['method'] == 'zoom':

@@ -41,12 +41,12 @@ def get_dap(option=None):
             'outline_x1': np.r_[-0.0125, -0.0125,  0.0125,  0.0125],
             },
         'XRSLR':{ # slit13
-            'cent': np.r_[14.2       , -1.61802349,  0.018     ],
-            'nin': np.r_[-0.98966998,  0.14336434,  0.        ],
-            'e0': np.r_[-0.14336434, -0.98966998, -0.        ],
-            'e1': np.r_[ 0., -0.,  1.],
-            'outline_x0': np.r_[-5.e-05,  5.e-05,  5.e-05, -5.e-05],
-            'outline_x1': np.r_[-0.0125, -0.0125,  0.0125,  0.0125],
+            'cent': np.r_[14.2       , -1.61802349,  0.018     ], # [m], Aperture center
+            'nin': np.r_[-0.98966998,  0.14336434,  0.        ], # Aperture normal vector
+            'e0': np.r_[-0.14336434, -0.98966998, -0.        ], # Aperture horizontal vector
+            'e1': np.r_[ 0., -0.,  1.], # Aperture vertical vector
+            'outline_x0': np.r_[-5.e-05,  5.e-05,  5.e-05, -5.e-05], # [m], Aperture horizontal corner displacement wrt center
+            'outline_x1': np.r_[-0.0125, -0.0125,  0.0125,  0.0125], # [m], Aperture vertical corner displacement wrt center
             },
         'XRSHRXe':{ # slit23
             'cent': np.r_[14.2       , -1.61802349,  -0.012     ],
@@ -103,12 +103,12 @@ def get_cry_dgeom(option=None):
             'curve_r': np.r_[np.inf, 0.6], # radius of curvature in plane (e0, e1) & nin --> thus cylinder axis (e0,e1)\cross nin
             },
         'XRSLR':{
-            'cent': np.r_[18.5, -2.24092473, 0.018],
-            'nin': np.r_[-0.26820408,  0.96336212,  0.],
-            'e0': np.r_[0.96336212, 0.26820408, 0.],
-            'e1': e1,
-            'extenthalf': np.r_[0.04/0.6, 0.014], # [m, rad]
-            'curve_r': np.r_[0.6, np.inf], # radius of curvature in plane (e0, e1) & nin --> thus cylinder axis (e0,e1)\cross nin
+            'cent': np.r_[18.5, -2.24092473, 0.018], # [m], Crystal center
+            'nin': np.r_[-0.26820408,  0.96336212,  0.], # Crystal normal vector
+            'e0': np.r_[0.96336212, 0.26820408, 0.], # Crystal horizontal vecot
+            'e1': e1, # Crystal vertical vector
+            'extenthalf': np.r_[0.04/0.6, 0.014], # [rad, m], Crystal half-length wrt center, [rad] = length/curve_r
+            'curve_r': np.r_[0.6, np.inf], # [m], radius of curvature in plane (e0, e1) & nin --> thus cylinder axis (e0,e1)\cross nin
             },
         'XRSHRXe':{
             'cent': np.r_[18.5, -2.24092473, -0.012],
@@ -190,14 +190,14 @@ def get_dcam(option=None):
             'cents_x1': extenthalf[1] * np.linspace(-1, 1, nx1),
             },
         'e1M3':{
-            'cent': np.r_[ 1.87949039e+01, -1.99162819e+00,  1.80000000e-02],
-            'nin': np.r_[-0.76797874, -0.64047533,  0.        ],
-            'e0': np.r_[ 0.64047533, -0.76797874, -0.        ],
-            'e1': np.r_[ 0., -0.,  1.],
-            'outline_x0': 0.5* pix_width * np.r_[-1, 1, 1, -1],
-            'outline_x1': 0.5* pix_height * np.r_[-1, -1, 1, 1],
-            'cents_x0': extenthalf[0] * np.linspace(-1, 1, nx0+1)[:-1] + pix_width/2,
-            'cents_x1': extenthalf[1] * np.linspace(-1, 1, nx1+1)[:-1] + pix_height/2,
+            'cent': np.r_[ 1.87949039e+01, -1.99162819e+00,  1.80000000e-02], # [m], Camera-face center
+            'nin': np.r_[-0.76797874, -0.64047533,  0.        ], # Camera-face normal vector
+            'e0': np.r_[ 0.64047533, -0.76797874, -0.        ], # Camera-face horizontal vector
+            'e1': np.r_[ 0., -0.,  1.], # Camera-face vertical vector
+            'outline_x0': 0.5* pix_width * np.r_[-1, 1, 1, -1], # [m], Pixel horizontal corners wrt pixel center
+            'outline_x1': 0.5* pix_height * np.r_[-1, -1, 1, 1], # [m], Pixel vertical corners wrt pixel center
+            'cents_x0': extenthalf[0] * np.linspace(-1, 1, nx0+1)[:-1] + pix_width/2, # [m], Horizontal centers of each pixel
+            'cents_x1': extenthalf[1] * np.linspace(-1, 1, nx1+1)[:-1] + pix_height/2, # [m], Vertical centers of each pixel
             },
         }
 

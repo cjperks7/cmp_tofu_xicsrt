@@ -175,7 +175,7 @@ def _run_rad_emis_tofu(
     key_cam = None,
     ):
 
-    '''
+    
     # Computes VOS
     _, coll = mv._run_mono_vol_tofu(
         coll = coll,
@@ -186,7 +186,7 @@ def _run_rad_emis_tofu(
         n0 = 301,
         n1 = 151,
         )
-    '''
+    
     #coll.save(path='/home/cjperks/test')
     # Computes signal with emissivity
     dsig = coll.compute_diagnostic_signal(
@@ -195,10 +195,10 @@ def _run_rad_emis_tofu(
         key_cam=[key_cam],
         key_integrand='emis_'+key_diag,
         key_ref_spectro=None,
-        #method='vos',
-        #res=None,
-        method='los',
-        res=0.001,
+        method='vos',
+        res=None,
+        #method='los',
+        #res=0.001,
         mode=None,
         groupby=None,
         val_init=None,
