@@ -32,6 +32,7 @@ def _init_config(
     key_cam = None,
     cry_shape = None,
     niter = None,
+    split = True,
     ):
 
     # -----------------
@@ -211,27 +212,20 @@ def _init_config(
 
     # Rocking curve
     config['optics']['crystal']['rocking_type'] = 'tofu'
-    if key_diag in ['XRSHRKr']:
-        config['optics']['crystal']['rocking_material'] = 'Germanium'
-        config['optics']['crystal']['rocking_miller'] = np.r_[2., 4., 2.,]
-    elif key_diag in ['XRSHRXe']:
-        config['optics']['crystal']['rocking_material'] = 'Quartz'
-        config['optics']['crystal']['rocking_miller'] = np.r_[1., 0., 1.,]
-    elif key_diag in ['XRSLR']:
-        config['optics']['crystal']['rocking_material'] = 'Germanium'
-        config['optics']['crystal']['rocking_miller'] = np.r_[2., 0., 2.,]
-    else:
-        config['optics']['crystal']['rocking_material'] = 'Germanium'
-        config['optics']['crystal']['rocking_miller'] = np.r_[2., 0., 2.,]
-
-
+    config['optics']['crystal']['rocking_material'] = dmat_cryst['material']
+    config['optics']['crystal']['rocking_miller'] = dmat_cryst['miller']
 
     # -----------------------------------------------------------
     # Builds camera
     # -----------------------------------------------------------
 
+    if split:
+        kk = key_cam.split('XRS')[0][:-1]
+    else:
+        kk = key_cam
+
     # create xicsrt camera
-    dgeom_cam = coll.dobj['camera'][key_cam.split('_')[0]]['dgeom']
+    dgeom_cam = coll.dobj['camera'][kk]['dgeom']
 
     # Init
     config['optics']['detector'] = {}

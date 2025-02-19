@@ -39,7 +39,7 @@ def _add_det_data(
     ):
 
     if split:
-        kk = key_cam.split('_')[0]
+        kk = key_cam.split('XRS')[0][:-1]
     else:
         kk = key_cam
 

@@ -197,6 +197,7 @@ def _prep_emis_tofu(
         emis_file,
         allow_pickle=True
         )['arr_0'][()]
+    diag = key_diag.split('_')[0]
 
     ########### ----- Add (R,Z) and wavelength data ------ ############
 
@@ -210,10 +211,10 @@ def _prep_emis_tofu(
         Z_knots = emis['plasma']['ZZ']['data'] # [m], dim(Z,)
 
     # Number of points to skip on fine wavelength mesh
-    fact = int(emis[key_diag]['emis']['data'].shape[-1]/nlamb)
+    fact = int(emis[diag]['emis']['data'].shape[-1]/nlamb)
 
     # Ensures wavelength data is monotonically increasing
-    lamb = emis[key_diag]['lambda']['data'][::fact]
+    lamb = emis[diag]['lambda']['data'][::fact]
     flip = False
     if np.mean(lamb[1:]-lamb[:-1])<0:
         lamb = np.flip(lamb)
@@ -239,8 +240,8 @@ def _prep_emis_tofu(
     RR_knots = np.repeat(R_knots[:, None], nZ, axis=1) # dim(mesh_R, mesh_Z)
     ZZ_knots = np.repeat(Z_knots[None, :], nR, axis=0) # dim(mesh_R, mesh_Z)
     emis2d_tmp_m0 = _interp_emis(
-        emis=emis[key_diag]['emis']['data'], # dim(fm_rhop, fm_theta, fm_nlamb)
-        eta=emis[key_diag]['eta']['data'], # dim(fm_nlamb)
+        emis=emis[diag]['emis']['data'], # dim(fm_rhop, fm_theta, fm_nlamb)
+        eta=emis[diag]['eta']['data'], # dim(fm_nlamb)
         nlamb=nlamb,
         fact=fact,
         RR_knots=RR_knots, # dim(mesh_R, mesh_Z)
