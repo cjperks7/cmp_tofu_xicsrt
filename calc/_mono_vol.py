@@ -6,7 +6,16 @@ Script to handle simulating a monochromatic, volume source
 
 # Modules
 import xicsrt
-import tofu as tf
+
+if False:        # For debugging TOFU on git
+    import sys
+    sys.path.insert(0,'/home/cjperks/tofu')
+    import tofu as tf
+    print(tf.__file__)
+    print(tf.__version__)
+    sys.path.pop(0)
+else:
+    import tofu as tf
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -226,17 +235,19 @@ def _run_mono_vol_tofu(
         store=True,
         )
 
+    #coll.save(path='/home/cjperks/orcd/scratch/work/tofu_sparc/diags')
+
     if lamb0 is not None:
         # Extracts VOS of wavelength of interest
         indlamb0 = np.argmin(np.abs(dvos[key_cam]['lamb']['data'] - lamb0*1e-10))
-        sig = np.sum(dvos[key_cam]['ph']['data'][:, :, :, indlamb0], axis=2)
+        sig = np.sum(dvos[key_cam]['ph_cross']['data'][:, :, :, indlamb0], axis=2)
 
         # Saves data
         dout['signal'] = sig/(4*np.pi)*1e6 # dim(nx,ny), [cm^3]
         #dout['dvos'] = dvos[key_cam]
     else:
         dout['signal'] = np.zeros(
-            dvos[key_cam]['ph']['data'].shape[0:2]
+            dvos[key_cam]['ph_cross']['data'].shape[0:2]
             )
 
     # extract keys to R, Z coordinates of polygon definign vos in poloidal cross-section

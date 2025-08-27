@@ -9,7 +9,16 @@ Sep 9th, 2024
 
 # Modules
 import xicsrt
-import tofu as tf
+
+if False:        # For debugging TOFU on git
+    import sys
+    sys.path.insert(0,'/home/cjperks/tofu')
+    import tofu as tf
+    print(tf.__file__)
+    print(tf.__version__)
+    sys.path.pop(0)
+else:
+    import tofu as tf
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -183,11 +192,12 @@ def _run_rad_emis_tofu(
         key_cam = key_cam,
         key_mesh = 'm0',
         lamb_vec = coll.ddata['mlamb_'+key_diag+'_k']['data'],
-        n0 = 301,
-        n1 = 151,
+        n0 = 181,
+        n1 = 101,
         )
+
+    #coll.save(path='/home/cjperks/orcd/scratch/work/tofu_sparc/diags')
     
-    #coll.save(path='/home/cjperks/test')
     # Computes signal with emissivity
     dsig = coll.compute_diagnostic_signal(
         key='flux_vos_'+key_diag,
