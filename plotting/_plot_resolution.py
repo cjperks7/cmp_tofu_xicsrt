@@ -155,7 +155,8 @@ def plt_res(
     for yy in np.arange(dxi['Z_scan']['data'].shape[1]): # loop over vert. pixels
         lab = int(yy - yind_xi)
 
-        if abs(lab) > 1:
+        #if abs(lab) > 1:
+        if abs(lab) > 80:
             continue
         #print(dout['XICSRT']['cents_cm'][0][xind_xi])
         #print(dout['XICSRT']['cents_cm'][1][yy])
@@ -169,7 +170,7 @@ def plt_res(
                 label = 'vert. bin %i'%(lab)
                 )
     
-    axz.legend(labelcolor='linecolor')
+    #axz.legend(labelcolor='linecolor')
     axz.grid('on')
     axz.set_xlabel(r'Z [cm]')
     axz.set_ylabel(r'signal [#ph/bin$^2$]')
@@ -184,7 +185,8 @@ def plt_res(
     for yy in np.arange(dtf['Z_scan']['data'].shape[1]): # loop over vert. pixels
         lab = int(yy - yind_tf)
 
-        if abs(lab) > 1:
+        #if abs(lab) > 1:
+        if abs(lab) > 80:
             continue
         #print(dout['ToFu']['cents_cm'][0][xind_tf])
         #print(dout['ToFu']['cents_cm'][1][yy])
@@ -198,7 +200,7 @@ def plt_res(
                 label = 'vert. bin %i'%(lab)
                 )
     
-    axz.legend(labelcolor='linecolor')
+    #axz.legend(labelcolor='linecolor')
     axz.grid('on')
     axz.set_xlabel(r'Z [cm]')
     axz.set_ylabel(r'signal [#ph/bin$^2$]')
@@ -222,7 +224,8 @@ def plt_res(
     pixels = np.arange(-cut, +cut)
 
     # Rebins the vertical pixels if desired
-    rebin = 1
+    rebin = 80
+    #rebin = 1
     M, N = ztf.shape
     remainder = M % rebin
     if remainder != 0:
