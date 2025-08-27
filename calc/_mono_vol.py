@@ -220,22 +220,29 @@ def _run_mono_vol_tofu(
         lamb_vec = coll.ddata['mlamb_bs1_ap']['data']
 
     # compute vos
-    dvos, dref = coll.compute_diagnostic_vos(
-        key_diag=key_diag,
-        key_mesh=key_mesh,
-        res_RZ=[0.01, 0.01],         # 0.005 would be better
-        res_phi=0.0005,        # 0.0002 would be better
-        lamb=lamb_vec,
-        n0=n0,
-        n1=n1,
-        visibility=False,
-        config=tf.load_config('SPARC-V0'),
-        return_vector=False,
-        #keep3d=False,
-        store=True,
-        )
-
-    #coll.save(path='/home/cjperks/orcd/scratch/work/tofu_sparc/diags')
+    if 'dvos' not in coll.dobj['diagnostic'][key_diag]['doptics'][key_cam].keys():
+        dvos, dref = coll.compute_diagnostic_vos(
+            key_diag=key_diag,
+            key_mesh=key_mesh,
+            res_RZ=[0.01, 0.01],         # 0.005 would be better
+            res_phi=0.0005,        # 0.0002 would be better
+            lamb=lamb_vec,
+            n0=n0,
+            n1=n1,
+            visibility=False,
+            config=tf.load_config('SPARC-V0'),
+            return_vector=False,
+            #keep3d=False,
+            store=True,
+            )
+        #coll.save(path='/home/cjperks/orcd/scratch/work/tofu_sparc/diags')
+    else:
+        kvos = coll.dobj['diagnostic'][key_diag]['doptics'][key_cam]['dvos']['ph_cross']
+        klamb = coll.dobj['diagnostic'][key_diag]['doptics'][key_cam]['dvos']['lamb']
+        dvos = {}
+        dvos[key_cam] = {}
+        dvos[key_cam]['lamb'] = coll.ddata[klamb]
+        dvos[key_cam]['ph_cross'] = coll.ddata[kvos]
 
     if lamb0 is not None:
         # Extracts VOS of wavelength of interest
