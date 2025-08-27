@@ -216,14 +216,15 @@ def _get_mv_results(
     folder = None,
     folder_xi = None,
     folder_tf = None,
-    name = None,
+    name_xi = None,
+    name_tf = None,
     case = 'mv',
     save_all = True,
     ):
     from cmp_tofu_xicsrt.utils import _conv as cv
 
     # Gets list of output files
-    xi_fils = [f for f in os.listdir(folder+'/'+folder_xi) if f.startswith(name)] 
+    xi_fils = [f for f in os.listdir(folder+'/'+folder_xi) if f.startswith(name_xi)] 
 
     # Init
     dxi = {}
@@ -266,7 +267,7 @@ def _get_mv_results(
             del dxi[key]
 
     # Loads ToFu data
-    tf_fils = [f for f in os.listdir(folder+'/'+folder_tf) if f.startswith(name)] 
+    tf_fils = [f for f in os.listdir(folder+'/'+folder_tf) if f.startswith(name_tf)] 
     print(tf_fils)
     dtf = np.load(
         os.path.join(folder,folder_tf,tf_fils[0]), 
