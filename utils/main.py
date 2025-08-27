@@ -55,6 +55,9 @@ def main(
     # Spectral-/spatial-resolution data
     res_run = False,
     dres = None,
+    # Velocity control
+    add_velocity = False,
+    dvel = None,
     # HPC controls
     run_xicsrt = True,
     run_tofu = False,
@@ -95,6 +98,8 @@ def main(
             run_xicsrt=run_xicsrt,
             run_tofu=run_tofu,
             dsave = dsave,
+            add_velocity = add_velocity,
+            dvel = dvel,
             )
 
     ########## Monochromatic, volumetric source 
@@ -109,6 +114,8 @@ def main(
             dvol = dvol,
             lamb0 = lamb0,
             subcam = subcam,
+            add_velocity = add_velocity,
+            dvel = dvel,
             # HPC controls
             run_xicsrt=run_xicsrt,
             run_tofu=run_tofu,

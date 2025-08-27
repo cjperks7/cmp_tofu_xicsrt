@@ -40,6 +40,9 @@ def run_mono_pt(
     run_xicsrt = True,
     run_tofu = True,
     dsave = None,
+    # Velocity controls
+    add_velocity = False,
+    dvel = None,
     ):
     '''
     dpt is a dictionary with keys
@@ -108,6 +111,8 @@ def run_mono_pt(
             config = config,
             dpt = dpt,
             lamb0 = lamb0,
+            add_velocity = add_velocity,
+            dvel = dvel,
             )
 
     # Runs ToFu
@@ -151,7 +156,10 @@ def _run_mono_pt_xicsrt(
     #nx = 256,
     #ny = 64,
     nx = 1028,
-    ny = 1062
+    ny = 1062,
+    # Velocity control
+    add_velocity = False,
+    dvel = None,
     ):
 
     # Init
@@ -222,6 +230,16 @@ def _run_mono_pt_xicsrt(
     # Angular distribution
     config['sources']['source']['angular_dist'] = 'isotropic_xy' # Horizontal & Vertical extent
     config['sources']['source']['spread'] = dpt['XICSRT']['dOmega'] # [rad], (x,y), half-angles
+
+    # If adding Doppler shift
+    if add_velocity:
+        config['sources']['source']['velocity'] = utils._tofu2xicsrt(
+            data = setup._add_velocity(
+                dvel = dvel,
+                #box_cent = dpt['ToFu']['point'][:,None,None,None]
+                box_cent = dpt['ToFu']['point'],
+                )
+            ) # [m/s], clockwise toroidal flow
 
     # Runs ray-tracing
     results = xicsrt.raytrace(config)

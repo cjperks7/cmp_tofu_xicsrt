@@ -10,13 +10,15 @@ Aug 5, 2024
 # Modules
 import numpy as np
 import copy
+import scipy.constants as cnt
 
 import cmp_tofu_xicsrt.utils as utils
 import cmp_tofu_xicsrt.setup._def_plasma as dp
 
 __all__ = [
     '_init_config',
-    '_build_source'
+    '_build_source',
+    '_add_velocity',
     ]
 
 ###################################################
@@ -351,62 +353,97 @@ def _add_velocity(
     dvel = None,
     box_cent = None
     ):
-    from omfit_classes import omfit_eqdsk
-    from scipy.interpolate import LinearNDInterpolator, interp1d
+    '''
+    dvel is a dictionary containing data about the velocity profile is the form:
+    \vec(v)(R,Z) = \omega(\Psi)*R*\hat(\phi) + u(\Psi)*\vect(B) [m/s]
+        where,
+        \omega and u are flux-functions
+        \omega [rad/s] is the solid body rotation frequency
+        R [m] is the local major radius
+        \hat(\phi) is the toroidal direction
+        u [m/s/T] is the poloidal flow
+        \vec(B) [T] is the local B-field vector
 
-    # Gets defaults
-    if dvel is None:
-        dvel = dplasma = dp.get_dvel(option='default')
+    The expected format of dvel is
+        1) if dvel['option'] == 'fixed'
+            Constant toroidal rotation
+        2) if dvel['option'] == 'radial'
+            Radial profile for toroidal rotation
 
-    # Loads geqdsk
-    geq = omfit_eqdsk.OMFITgeqdsk(dvel['geqdsk'])
+    TO DO:
+        1) Add helicity part
 
-    # Gets equilibrium data
-    if dvel['xquant'] == 'sq. norm. pol. flux':
-        rho_2d = np.sqrt(geq['AuxQuantities']['PSIRZ_NORM']).T # dim(nR,nZ)
-    R_1d = geq['AuxQuantities']['R'] # dim(nR,)
-    Z_1d = geq['AuxQuantities']['Z'] # dim(nZ,)
-    Z_2d, R_2d = np.meshgrid(Z_1d, R_1d) # dim(nR, nZ)
+    '''
 
-    # Interpolates onto finer mesh on desired precision
-    precR = 1e-3 # [m]
-    precZ = 1e-3 # [m]
-
-    nR = int(np.ceil((max(R_1d)-min(R_1d))/precR))
-    nZ = int(np.ceil((max(Z_1d)-min(Z_1d))/precZ))
-    R_fine_1d = np.linspace(min(R_1d), max(R_1d), nR)
-    Z_fine_1d = np.linspace(min(Z_1d), max(Z_1d), nZ)
-    Z_fine_2d, R_fine_2d = np.meshgrid(Z_fine_1d, R_fine_1d) # dim(nR, nZ)
-
-    rho_fine_2d = LinearNDInterpolator(
-        (R_2d.flatten(), Z_2d.flatten()),
-        rho_2d.flatten()
-        )(
-            (R_fine_2d.flatten(), Z_fine_2d.flatten())
-            ).reshape(R_fine_2d.shape)
-
-    # Flux-function toroidal velocity
-    rho_1d = dvel['rho'] # dim(nrho,)
-    vel_1d = dvel['vel'] # [m/s], dim(nrho,)
-
-    # Gets box data
+    # Init
     box_R = np.sqrt(box_cent[0]**2+box_cent[1]**2)
     box_Z = box_cent[2]
+    alp = np.arctan(box_cent[1]/box_cent[0])
 
-    # Finds the flux-surface of the box center
-    indR = np.argmin(abs(R_fine_1d-box_R))
-    indZ = np.argmin(abs(Z_fine_1d-box_Z))
-    box_rho = rho_fine_2d[indR,indZ]
+    # If a constant rotation frequency
+    if dvel['option'] == 'fixed':
+        # Calculates magnitude of local linear velocity
+        box_vel = dvel['omega']*box_R # [m/s]
 
-    # Finds the velocity at this flux surface
-    box_vel = inter1d(
-        rho_1d, vel_1d,
-        bounds_error=False,
-        fill_value = 0.0
-        )(box_rho)
+    # Test case with fixed linear velocity
+    elif dvel['option'] == 'test':
+        box_vel = dvel['velocity'] # [m/s]
+
+    # If a radial profile for the rotation frequency
+    elif dvel['option'] == 'radial':
+
+        from omfit_classes import omfit_eqdsk
+        from scipy.interpolate import LinearNDInterpolator, interp1d
+
+        # Gets defaults
+        if dvel is None:
+            dvel = dplasma = dp.get_dvel(option='default')
+
+        # Loads geqdsk
+        geq = omfit_eqdsk.OMFITgeqdsk(dvel['geqdsk'])
+
+        # Gets equilibrium data
+        if dvel['xquant'] == 'sq. norm. pol. flux':
+            rho_2d = np.sqrt(geq['AuxQuantities']['PSIRZ_NORM']).T # dim(nR,nZ)
+        R_1d = geq['AuxQuantities']['R'] # dim(nR,)
+        Z_1d = geq['AuxQuantities']['Z'] # dim(nZ,)
+        Z_2d, R_2d = np.meshgrid(Z_1d, R_1d) # dim(nR, nZ)
+
+        # Interpolates onto finer mesh on desired precision
+        precR = 1e-3 # [m]
+        precZ = 1e-3 # [m]
+
+        nR = int(np.ceil((max(R_1d)-min(R_1d))/precR))
+        nZ = int(np.ceil((max(Z_1d)-min(Z_1d))/precZ))
+        R_fine_1d = np.linspace(min(R_1d), max(R_1d), nR)
+        Z_fine_1d = np.linspace(min(Z_1d), max(Z_1d), nZ)
+        Z_fine_2d, R_fine_2d = np.meshgrid(Z_fine_1d, R_fine_1d) # dim(nR, nZ)
+
+        rho_fine_2d = LinearNDInterpolator(
+            (R_2d.flatten(), Z_2d.flatten()),
+            rho_2d.flatten()
+            )(
+                (R_fine_2d.flatten(), Z_fine_2d.flatten())
+                ).reshape(R_fine_2d.shape)
+
+        # Flux-function toroidal velocity
+        rho_1d = dvel['rho'] # dim(nrho,)
+        omega_1d = dvel['omega'] # [m/s], dim(nrho,)
+
+        # Finds the flux-surface of the box center
+        indR = np.argmin(abs(R_fine_1d-box_R))
+        indZ = np.argmin(abs(Z_fine_1d-box_Z))
+        box_rho = rho_fine_2d[indR,indZ]
+
+        # Finds the velocity at this flux surface
+        box_omega = inter1d(
+            rho_1d, omega_1d,
+            bounds_error=False,
+            fill_value = 0.0
+            )(box_rho) # [rad/s]
+        box_vel = box_omega*box_R # [m/s]
 
     # Converts to a clockwise toroidal flow
-    alp = np.arctan(box_cent[1]/box_cent[0])
     return np.r_[
         box_vel * np.sin(alp),
         box_vel * -1* np.cos(alp),

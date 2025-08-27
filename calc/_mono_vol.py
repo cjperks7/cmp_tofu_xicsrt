@@ -38,6 +38,9 @@ def run_mono_vol(
     subcam = None,
     #vol_plt = vol_plt,
     lamb0 = None,
+    # Velocity controls
+    add_velocity = False,
+    dvel = None,
     # HPC controls
     run_xicsrt = False,
     run_tofu = True,
@@ -70,6 +73,8 @@ def run_mono_vol(
             lamb0 = lamb0,
             nx = nx,
             ny = ny,
+            add_velocity = add_velocity,
+            dvel = dvel,
             )
 
     # Runs ToFu
@@ -118,6 +123,8 @@ def _run_mono_vol_xicsrt(
     # Detector settings
     nx = 1028,
     ny = 1062,
+    add_velocity = False,
+    dvel = None,
     ):
 
     # Builds box spatial distribution
@@ -154,6 +161,9 @@ def _run_mono_vol_xicsrt(
         omega_binorm = omega_binorm,
         omega_dl = omega_dl,
         key_ap = key_ap,
+        # Velocity controls
+        add_velocity = add_velocity,
+        dvel = dvel,
         # HPC controls
         dHPC = dHPC,
         calc_signal = calc_signal,
@@ -212,7 +222,7 @@ def _run_mono_vol_tofu(
         visibility=False,
         config=tf.load_config('SPARC-V0'),
         return_vector=False,
-        keep3d=False,
+        #keep3d=False,
         store=True,
         )
 

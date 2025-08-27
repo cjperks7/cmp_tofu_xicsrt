@@ -120,6 +120,9 @@ def get_dpt(
             },
         }
 
+    if len(option.split('_')) >1:
+        option = option.split('_')[0]
+
     # Output
     return dpt[option]
 
