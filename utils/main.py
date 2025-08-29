@@ -223,59 +223,67 @@ def _get_mv_results(
     ):
     from cmp_tofu_xicsrt.utils import _conv as cv
 
-    # Gets list of output files
-    xi_fils = [f for f in os.listdir(folder+'/'+folder_xi) if f.startswith(name_xi)] 
-
     # Init
-    dxi = {}
-    optics = ['source', 'crystal', 'detector']
+    dout = {}
 
-    # Loads XICSRT data
-    for xi in xi_fils:
-        print(xi)
-        key = xi.split('job')[-1].split('.')[0]
-        dxi[key] = np.load(
-            os.path.join(folder,folder_xi,xi),
-            allow_pickle=True
-            )['arr_0'][()]['XICSRT']
+    if name_xi is not None:
+        # Gets list of output files
+        xi_fils = [f for f in os.listdir(folder+'/'+folder_xi) if f.startswith(name_xi)] 
 
-        if case == 'mv':
-            for op in optics:
-                for kk in dxi[key][op].keys():
-                    dxi[key][op][kk] = cv._xicsrt2tofu(
-                        data=dxi[key][op][kk]
-                        )
+        # Init
+        dxi = {}
+        optics = ['source', 'crystal', 'detector']
 
-        # Adds together signal data
-        if 'signal' not in dxi.keys():
-            dxi['signal'] = np.zeros(dxi[key]['signal'].shape)
+        # Loads XICSRT data
+        for xi in xi_fils:
+            print(xi)
+            key = xi.split('job')[-1].split('.')[0]
+            dxi[key] = np.load(
+                os.path.join(folder,folder_xi,xi),
+                allow_pickle=True
+                )['arr_0'][()]['XICSRT']
 
-            if 'voxels' in dxi[key].keys():  ############### Temporary version control fix
-                dxi['voxels'] = copy.deepcopy(dxi[key]['voxels'])
-            dxi['extent'] = copy.deepcopy(dxi[key]['extent'])
-            dxi['aspect'] = copy.deepcopy(dxi[key]['aspect'])
-            dxi['cents_cm'] = copy.deepcopy(dxi[key]['cents_cm'])
-            dxi['npix'] = copy.deepcopy(dxi[key]['npix'])
+            if case == 'mv':
+                for op in optics:
+                    for kk in dxi[key][op].keys():
+                        dxi[key][op][kk] = cv._xicsrt2tofu(
+                            data=dxi[key][op][kk]
+                            )
+
+            # Adds together signal data
+            if 'signal' not in dxi.keys():
+                dxi['signal'] = np.zeros(dxi[key]['signal'].shape)
+
+                if 'voxels' in dxi[key].keys():  ############### Temporary version control fix
+                    dxi['voxels'] = copy.deepcopy(dxi[key]['voxels'])
+                dxi['extent'] = copy.deepcopy(dxi[key]['extent'])
+                dxi['aspect'] = copy.deepcopy(dxi[key]['aspect'])
+                dxi['cents_cm'] = copy.deepcopy(dxi[key]['cents_cm'])
+                dxi['npix'] = copy.deepcopy(dxi[key]['npix'])
+                if case == 'me':
+                    dxi['lambda_AA'] = copy.deepcopy(dxi[key]['lambda_AA'])
+                    dxi['dispersion'] = np.zeros(dxi[key]['signal'].shape +dxi[key]['lambda_AA'].shape)
+            dxi['signal'] += dxi[key]['signal']
             if case == 'me':
-                dxi['lambda_AA'] = copy.deepcopy(dxi[key]['lambda_AA'])
-                dxi['dispersion'] = np.zeros(dxi[key]['signal'].shape +dxi[key]['lambda_AA'].shape)
-        dxi['signal'] += dxi[key]['signal']
-        if case == 'me':
-            dxi['dispersion'] += dxi[key]['dispersion']
+                dxi['dispersion'] += dxi[key]['dispersion']
 
-        if not save_all:
-            del dxi[key]
+            if not save_all:
+                del dxi[key]
+
+        # Saves
+        dout['XICSRT'] = dxi
 
     # Loads ToFu data
-    tf_fils = [f for f in os.listdir(folder+'/'+folder_tf) if f.startswith(name_tf)] 
-    print(tf_fils)
-    dtf = np.load(
-        os.path.join(folder,folder_tf,tf_fils[0]), 
-        allow_pickle=True
-        )['arr_0'][()]['ToFu']
+    if name_tf is not None:
+        tf_fils = [f for f in os.listdir(folder+'/'+folder_tf) if f.startswith(name_tf)] 
+        print(tf_fils)
+        dtf = np.load(
+            os.path.join(folder,folder_tf,tf_fils[0]), 
+            allow_pickle=True
+            )['arr_0'][()]['ToFu']
+
+        # Saves
+        dout['ToFu'] = dtf
 
     # Output
-    return {
-        'XICSRT': dxi,
-        'ToFu': dtf
-        }
+    return dout
