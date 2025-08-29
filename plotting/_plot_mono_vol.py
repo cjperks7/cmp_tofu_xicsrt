@@ -15,8 +15,8 @@ import matplotlib.gridspec as gridspec
 
 plt.rcParams.update({'font.size': 16})
 
-colors = ['b', 'r', 'g', 'm', 'c']
-markers = ['D', 'o', 'D', 'o']
+colors = ['b', 'r', 'g', 'm', 'c', 'k']
+markers = ['D', 'o', 'D', 'o', 'D', 'o']
 
 
 __all__ = [
@@ -72,6 +72,7 @@ def _plt_slice(
     color = None,
     marker = None,
     tag = None,
+    extra_tag = '',
     lw = None,
     ms = None,
     label = None,
@@ -99,7 +100,7 @@ def _plt_slice(
             '-',
             color = color,
             marker =  marker,
-            label = tag,
+            label = tag+extra_tag,
             linewidth = lw,
             markersize = ms
             )
@@ -138,7 +139,7 @@ def _plt_slice(
             '-',
             color = color,
             marker = marker,
-            label = tag,
+            label = tag+extra_tag,
             linewidth = lw,
             markersize = ms
             )
@@ -170,7 +171,7 @@ def _plt_slice(
             '-',
             color = color,
             marker = marker,
-            label = tag,
+            label = tag+extra_tag,
             linewidth = lw,
             markersize = ms
             )
@@ -206,7 +207,7 @@ def _plt_slice(
             '-',
             color = color,
             marker = marker,
-            label = tag,
+            label = tag+extra_tag,
             linewidth = lw,
             markersize = ms
             )
@@ -348,6 +349,7 @@ def plt_vos(
 # Plots point source results
 def plt_mono_vol(
     ddatas = None,
+    extra_tags = '',
     ):
 
     ###########
@@ -364,6 +366,9 @@ def plt_mono_vol(
 
         # Loop over codes
         for kk in ['ToFu', 'XICSRT']:
+            if kk not in ddata.keys():
+                continue
+            
             # Init
             scale[ii][kk] = {}
 
@@ -413,7 +418,7 @@ def plt_mono_vol(
 
     # Zooming
     dcm_h = 0.3
-    dcm_v = 10
+    dcm_v = 2
 
     # Plots photon flux on detector from XICSRT
     fig1, ax1 = plt.subplots(len(ddatas),2)
@@ -421,13 +426,15 @@ def plt_mono_vol(
     cntr = 0
     for ii, ddata in enumerate(ddatas):
         for jj, kk in enumerate(['XICSRT', 'ToFu']):
-            if kk not in ddata.keys():
-                continue
-
             if len(ddatas) > 1:
                 ax = ax1[ii,jj]
             else:
                 ax = ax1[jj]
+
+            if kk not in ddata.keys():
+                cntr += 1
+                ax.set_axis_off()
+                continue
 
             _plt_image(
                 ax = ax,
@@ -445,6 +452,9 @@ def plt_mono_vol(
     fig1.show()
 
     for ddata in ddatas:
+        if 'ToFu' not in ddata.keys() or 'XICSRT' not in ddata.keys():
+            continue
+
         print('Total Flux Error:')
         print('%0.2f %%'%(
             (
@@ -464,7 +474,13 @@ def plt_mono_vol(
     for ii, ddata in enumerate(ddatas):
         for jj, kk in enumerate(['XICSRT', 'ToFu']):
             if kk not in ddata.keys():
+                cntr += 1
                 continue
+
+            if isinstance(extra_tags, list):
+                extra_tag = extra_tags[ii]
+            elif isinstance(extra_tags, str):
+                extra_tag = extra_tags
 
             #### Plots slice integrated over vertical channels
             _plt_slice(
@@ -473,6 +489,7 @@ def plt_mono_vol(
                 color = colors[cntr],
                 marker = markers[cntr],
                 tag = kk,
+                extra_tag = extra_tag,
                 lw = lw,
                 ms = ms,
                 label = label_h,
@@ -494,6 +511,7 @@ def plt_mono_vol(
                 color = colors[cntr],
                 marker = markers[cntr],
                 tag = kk,
+                extra_tag = extra_tag,
                 lw = lw,
                 ms = ms,
                 label = label_v,
@@ -515,6 +533,7 @@ def plt_mono_vol(
                 color = colors[cntr],
                 marker = markers[cntr],
                 tag = kk,
+                extra_tag = extra_tag,
                 lw = lw,
                 ms = ms,
                 label = label_hv,
@@ -537,6 +556,7 @@ def plt_mono_vol(
                 color = colors[cntr],
                 marker = markers[cntr],
                 tag = kk,
+                extra_tag = extra_tag,
                 lw = lw,
                 ms = ms,
                 label = label_hv,
@@ -604,6 +624,7 @@ def plt_mono_vol(
     cntr = 0
     for jj, kk in enumerate(['XICSRT', 'ToFu']):
         if kk not in ddata.keys():
+            cntr += 1
             continue
 
         _plt_slice(
