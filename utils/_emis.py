@@ -230,7 +230,7 @@ def _prep_emis_tofu(
         R_knots=R_knots,
         Z_knots=Z_knots,
         lamb = lamb, # [AA]
-        rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data'])
+        rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data']).T
         )
 
     ########### ----- Add emissivity data ------ ############
