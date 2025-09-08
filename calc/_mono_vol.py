@@ -6,16 +6,7 @@ Script to handle simulating a monochromatic, volume source
 
 # Modules
 import xicsrt
-
-if False:        # For debugging TOFU on git
-    import sys
-    sys.path.insert(0,'/home/cjperks/tofu')
-    import tofu as tf
-    print(tf.__file__)
-    print(tf.__version__)
-    sys.path.pop(0)
-else:
-    import tofu as tf
+import tofu as tf
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,21 +31,19 @@ __all__ = [
 # Simulates a monochromatic, volume source ...
 def run_mono_vol(
     coll = None,
-    key_diag = None,
-    key_cam = None,
-    config = None,
-    dvol = None,
-    subcam = None,
-    #vol_plt = vol_plt,
     lamb0 = None,
+    key_diag = None, key_cam = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
+    config = None,
+    subcam = None,
     # Velocity controls
-    add_velocity = False,
-    dvel = None,
+    add_velocity = False, dvel = None,
     # HPC controls
-    run_xicsrt = False,
-    run_tofu = True,
+    run_xicsrt = False, run_tofu = True,
     dHPC = None,
     dsave = None,
+    dvol = None,
+    dvos_tf = None,
     # Detector settings
     nx = 1028,
     ny = 1062,
@@ -64,10 +53,11 @@ def run_mono_vol(
     dout = {}
 
     # Adds mesh data to compute VOS on
-    coll = utils._add_mesh_data(
+    coll = utils._prep_emis_tofu(
         coll = coll,
-        case = 'simple',
-        lamb = lamb0
+        lamb0 = lamb0,
+        case = 'mv',
+        key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
         )
 
     # Runs XICSRT
@@ -88,11 +78,11 @@ def run_mono_vol(
 
     # Runs ToFu
     if run_tofu:
-        dout['ToFu'], _ = _run_mono_vol_tofu(
+        dout['ToFu'] = _run_mono_vol_tofu(
             coll = coll,
-            key_diag = key_diag,
-            key_cam = key_cam,
-            lamb0 = lamb0,
+            key_diag = key_diag, key_cam = key_cam,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            dvos_tf = dvos_tf,
             subcam = subcam,
             )
 
@@ -198,64 +188,33 @@ def _run_mono_vol_xicsrt(
 # ... in ToFu
 def _run_mono_vol_tofu(
     coll = None,
-    key_diag = None,
-    key_cam = None,
-    key_mesh = 'mRZ',
-    subcam = None,
-    # Wavelength controls
-    lamb0 = None, # [AA]
-    lamb_vec = None,
+    key_diag = None, key_cam = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
     # Volume discretization controls
-    n0 = 301,
-    n1 = 201,
+    dvos_tf = None,
+    # Other
+    subcam = None,
     ):
 
-    # Init
+    # Calculates VOS matrix if neccessary
+    if dvos_tf['run_vos']:
+        coll = utils._compute_vos_tofu(
+            coll = coll,
+            key_diag = key_diag,
+            key_mesh = key_mesh, key_lamb = key_lamb,
+            dvos_tf = dvos_tf
+            )
+
+    # Calculates signal
+    dsig = utils._compute_signal_tofu(
+        coll = coll,
+        key_diag = key_diag, key_cam = key_cam,
+        key_emis = key_emis,
+        )
+
+    # Stores results
     dout = {}
-    print(n0)
-    print(n1)
-
-    # Gets wavelength vector to compute VOS on
-    if lamb_vec is None:
-        lamb_vec = coll.ddata['mlamb_bs1_ap']['data']
-
-    # compute vos
-    if 'dvos' not in coll.dobj['diagnostic'][key_diag]['doptics'][key_cam].keys():
-        dvos, dref = coll.compute_diagnostic_vos(
-            key_diag=key_diag,
-            key_mesh=key_mesh,
-            res_RZ=[0.01, 0.01],         # 0.005 would be better
-            res_phi=0.0005,        # 0.0002 would be better
-            lamb=lamb_vec,
-            n0=n0,
-            n1=n1,
-            visibility=False,
-            config=tf.load_config('SPARC-V0'),
-            return_vector=False,
-            #keep3d=False,
-            store=True,
-            )
-        #coll.save(path='/home/cjperks/orcd/scratch/work/tofu_sparc/diags')
-    else:
-        kvos = coll.dobj['diagnostic'][key_diag]['doptics'][key_cam]['dvos']['ph_cross']
-        klamb = coll.dobj['diagnostic'][key_diag]['doptics'][key_cam]['dvos']['lamb']
-        dvos = {}
-        dvos[key_cam] = {}
-        dvos[key_cam]['lamb'] = coll.ddata[klamb]
-        dvos[key_cam]['ph_cross'] = coll.ddata[kvos]
-
-    if lamb0 is not None:
-        # Extracts VOS of wavelength of interest
-        indlamb0 = np.argmin(np.abs(dvos[key_cam]['lamb']['data'] - lamb0*1e-10))
-        sig = np.sum(dvos[key_cam]['ph_cross']['data'][:, :, :, indlamb0], axis=2)
-
-        # Saves data
-        dout['signal'] = sig/(4*np.pi)*1e6 # dim(nx,ny), [cm^3]
-        #dout['dvos'] = dvos[key_cam]
-    else:
-        dout['signal'] = np.zeros(
-            dvos[key_cam]['ph_cross']['data'].shape[0:2]
-            )
+    dout['signal'] = dsig[key_cam]['data'] # dim(nx,ny), [photons/s/bin^2]
 
     # extract keys to R, Z coordinates of polygon definign vos in poloidal cross-section
     pcross0, pcross1 = tf.data._class8_vos_utilities._get_overall_polygons(
@@ -289,7 +248,7 @@ def _run_mono_vol_tofu(
         )
     
     # Output
-    return dout, coll
+    return dout
 
 ###################################################
 #

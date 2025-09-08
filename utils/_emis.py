@@ -22,6 +22,12 @@ __all__ = [
     '_prep_emis_xicsrt',
     ]
 
+###################################################
+#
+#          Prepares emissivity output data
+#
+###################################################
+
 # Converts #rays to normalized emissivity
 def _conv_2normEmis(
     voxels=None,
@@ -117,6 +123,277 @@ def _calc_signal(
     # Output
     return dout
 
+###################################################
+#
+#          Prepares emissivity input data
+#
+###################################################
+
+# Formats emissivity data for convenient use in XICSRT
+def _prep_emis_xicsrt(
+    coll = None,
+    key_diag = None,
+    key_mesh = None,
+    ilamb = None,
+    dlamb = None,
+    nlamb = None,
+    ):
+
+    # Output
+    return {
+        'emis': (
+            coll.ddata['emis_'+key_diag]['data'][:,:,ilamb]
+            * (4*np.pi) *1e-6 * 1e-10 # Converts from ph/s/m3/sr/m -> ph/s/cm3/AA
+            ), # dim(mesh_R, mesh_Z); [ph/s/cm3/AA]
+        'mesh_R': coll.ddata['%s_k0'%(key_mesh)]['data'], # dim(mesh_R); [m]
+        'mesh_Z': coll.ddata['%s_k1'%(key_mesh)]['data'], # dim(mesh_Z); [m]
+        'dlamb': dlamb, # dim(scalar); [AA]
+        'nlamb': nlamb,
+        'ilamb': ilamb,
+        }
+
+# Imoort the emissivity data into Collection object 
+def _prep_emis_tofu(
+    coll = None,
+    case = None,
+    key_diag = None, #key_cam = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
+    emis_file = None,
+    lamb0 = None,
+    conf = None,
+    # R,Z discretization
+    R_knots = None,
+    Z_knots = None,
+    # wavelength discretization
+    nlamb = 500
+    ):
+
+    # Loads data
+    if emis_file is not None:
+        demis = np.load(
+            emis_file,
+            allow_pickle=True
+            )['arr_0'][()]
+        R_knots = emis['plasma']['RR']['data'] # [m], dim(R,)
+        Z_knots = emis['plasma']['ZZ']['data'] # [m], dim(Z,)
+        rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data']).T
+    else:
+        R_knots = None
+        Z_knots = None
+        rhop_RZ = None
+    
+    # Adds (R,Z) mesh data to Collection object
+    coll = utils._build_RZ_mesh_tofu(
+        coll = coll,
+        key_mesh = key_mesh,
+        conf = conf,
+        case = case,
+        dplasma = None,
+        # Data for flux-function map
+        R_knots = R_knots,
+        Z_knots = Z_knots,
+        rhop_RZ = rhop_RZ,
+        )
+
+    # If running a monochromatic, volumetric source
+    if case == 'mv':
+        coll = _build_emis_box(
+            coll = coll,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            lamb0 = lamb0,
+            )
+
+    # If running a Gaussian in energy, constant in space source
+    elif case == 'me':
+        coll = _build_emis_gaussian(
+            coll = coll,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            lamb0 = lamb0,
+            )
+
+    # If running an emissivity map from tofu_sparc
+    elif case == 'rad_emis':
+        coll = _build_emis_tfs(
+            coll = coll,
+            key_diag = key_diag,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            nlamb = nlamb,
+            demis = demis,
+            R_knots = R_knots, Z_knots = Z_knots,
+            )
+
+    # Output
+    return coll
+
+###################################################
+#
+#           Emissivity types
+#
+###################################################
+
+# If emissivity data is generated using tofu_sparc
+def _build_emis_tfs(
+    coll = None,
+    key_diag = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
+    nlamb = None,
+    # tofu_sparc data
+    demis = None,
+    R_knots = None,
+    Z_knots = None,
+    ):
+
+    # Init
+    diag_com = key_diag.split('_')[0] # Common name
+
+    ########### ----- Add wavelength data ------ ############
+
+    # Number of points to skip on fine wavelength mesh
+    fact = int(demis[diag_com]['emis']['data'].shape[-1]/nlamb)
+
+    # Ensures wavelength data is monotonically increasing
+    lamb_vec = demis[diag_com]['lambda']['data'][::fact]
+    flip = False
+    if np.mean(lamb_vec[1:]-lamb_vec[:-1])<0:
+        lamb_vec = np.flip(lamb_vec)
+        flip = True
+
+    # Adds wavelength mesh to Collection object
+    coll = utils._build_lamb_mesh_tofu(
+        coll = coll,
+        key_lamb = key_lamb,
+        lamb_vec = lamb_vec,    # [AA]
+        )
+
+    ########### ----- Add emissivity data ------ ############
+
+    # Interpolates from transport grid onto regular grid
+    nR, nZ = R_knots.size, Z_knots.size
+    RR_knots = np.repeat(R_knots[:, None], nZ, axis=1) # dim(mesh_R, mesh_Z)
+    ZZ_knots = np.repeat(Z_knots[None, :], nR, axis=0) # dim(mesh_R, mesh_Z)
+    emis_RZ = _interp_emis(
+        emis=demis[diag_com]['emis']['data'], # dim(fm_rhop, fm_theta, fm_nlamb)
+        eta=demis[diag_com]['eta']['data'], # dim(fm_nlamb)
+        nlamb=nlamb,
+        fact=fact,
+        RR_knots=RR_knots, # dim(mesh_R, mesh_Z)
+        ZZ_knots=ZZ_knots, # dim(mesh_R, mesh_Z)
+        RR_asym=demis['plasma']['rhop_contours']['R']['data'], # dim(fm_rhop, fm_theta),
+        ZZ_asym=demis['plasma']['rhop_contours']['Z']['data'], # dim(fm_rhop, fm_theta)
+        ) # dim(mesh_R, mesh_Z, nlamb)
+
+    if flip:
+        emis_RZ = np.flip(emis_RZ, axis=-1)
+
+    # Adds emissivity mesh data to Collection object
+    coll = utils._build_emis_mesh_tofu(
+        coll = coll,
+        key_mesh = key_mesh,
+        key_lamb = key_lamb,
+        key_emis = key_emis,
+        # Data
+        emis_RZ = emis_RZ, # dim(R,Z,lambda); [ph/s/m3/sr/m]
+        #emis_1d = None, # dim(lambda,); [ph/s/m3/sr/m]
+        )
+
+    # Output
+    return coll
+
+# Box function in energy, constant in space
+def _build_emis_box(
+    coll = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
+    lamb0 = None,
+    ):
+
+    # Gets box shape
+    dtol = 1e-6         # [AA]
+    lamb_vec = np.r_[
+        -dtol/2,
+        dtol/2
+        ] + lamb0 # [AA]
+
+    # Prepares Gaussian emissivity at 1 ph/s/cm3
+    emis = np.ones_like(lamb_vec)*(
+        1e6 # [ph/s/m3]
+        /dtol*1e10 # [1/m]
+        / (4*np.pi) # [1/sr]
+        ) # [ph/s/m3/sr/m], dim(nlamb,)
+
+    # Assumes spatially homogeneous
+    nR, nZ = coll.dobj['mesh'][key_mesh]['shape_k']
+    emis_RZ = np.repeat(
+        np.repeat(emis[None, None, :], nR, axis=0),
+        nZ,
+        axis=1,
+        )
+
+    # Adds wavelength mesh to Collection object
+    coll = utils._build_lamb_mesh_tofu(
+        coll = coll,
+        key_lamb = key_lamb,
+        lamb_vec = lamb_vec,    # [AA]
+        )
+
+    # Adds emissivity mesh data to Collection object
+    coll = utils._build_emis_mesh_tofu(
+        coll = coll,
+        key_mesh = key_mesh,
+        key_lamb = key_lamb,
+        key_emis = key_emis,
+        # Data
+        emis_RZ = emis_RZ, # dim(R,Z,lambda); [ph/s/m3/sr/m]
+        #emis_1d = None, # dim(lambda,); [ph/s/m3/sr/m]
+        )
+
+    # Output
+    return coll
+
+# Gaussian in energy, constant in space
+def _build_emis_gaussian(
+    coll = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
+    lamb0 = None,
+    ):
+
+    # Gets Gaussian
+    lamb_vec, fE = _build_gaussian(lamb0=lamb0) # [AA], [1/AA], dim(nlamb,)
+
+    # Prepares Gaussian emissivity at 1 ph/s/cm3
+    emis = (
+        1e6 # [ph/s/m3]
+        *fE*1e10 # [1/m]
+        / (4*np.pi) # [1/sr]
+        ) # [ph/s/m3/sr/m], dim(nlamb,)
+
+    # Assumes spatially homogeneous
+    nR, nZ = coll.dobj['mesh'][key_mesh]['shape_k']
+    emis_RZ = np.repeat(
+        np.repeat(emis[None, None, :], nR, axis=0),
+        nZ,
+        axis=1,
+        )
+
+    # Adds wavelength mesh to Collection object
+    coll = utils._build_lamb_mesh_tofu(
+        coll = coll,
+        key_lamb = key_lamb,
+        lamb_vec = lamb_vec,    # [AA]
+        )
+
+    # Adds emissivity mesh data to Collection object
+    coll = utils._build_emis_mesh_tofu(
+        coll = coll,
+        key_mesh = key_mesh,
+        key_lamb = key_lamb,
+        key_emis = key_emis,
+        # Data
+        emis_RZ = emis_RZ, # dim(R,Z,lambda); [ph/s/m3/sr/m]
+        #emis_1d = None, # dim(lambda,); [ph/s/m3/sr/m]
+        )
+
+    # Output
+    return coll
 
 ###################################################
 #
@@ -155,115 +432,6 @@ def _build_gaussian(
 
     # Output, [AA], [1/AA], dim(nlamb,)
     return lamb, fE
-
-# Formats emissivity data for convenient use in XICSRT
-def _prep_emis_xicsrt(
-    coll = None,
-    key_diag = None,
-    ilamb = None,
-    dlamb = None,
-    nlamb = None,
-    ):
-
-    # Output
-    return {
-        'emis': (
-            coll.ddata['emis_'+key_diag]['data'][:,:,ilamb]
-            * (4*np.pi) *1e-6 * 1e-10 # Converts from ph/s/m3/sr/m -> ph/s/cm3/AA
-            ), # dim(mesh_R, mesh_Z); [ph/s/cm3/AA]
-        'mesh_R': coll.ddata['m0_k0']['data'], # dim(mesh_R); [m]
-        'mesh_Z': coll.ddata['m0_k1']['data'], # dim(mesh_Z); [m]
-        'dlamb': dlamb, # dim(scalar); [AA]
-        'nlamb': nlamb,
-        'ilamb': ilamb,
-        }
-
-# Imoort the emissivity data into Collection object 
-def _prep_emis_tofu(
-    coll = None,
-    key_diag = None,
-    key_cam = None,
-    emis_file = None,
-    conf = None,
-    # R,Z discretization
-    R_knots = None,
-    Z_knots = None,
-    # wavelength discretization
-    nlamb= 500
-    ):
-
-    # Loads data
-    emis = np.load(
-        emis_file,
-        allow_pickle=True
-        )['arr_0'][()]
-    diag_com = key_diag.split('_')[0] # Common name
-
-    ########### ----- Add (R,Z) and wavelength data ------ ############
-
-    if conf is None:
-        conf = tf.load_config('SPARC-V0')
-
-    # If user wishes to use (R,Z) mesh from geqdsk file
-    if R_knots is None:
-        R_knots = emis['plasma']['RR']['data'] # [m], dim(R,)
-    if Z_knots is None:
-        Z_knots = emis['plasma']['ZZ']['data'] # [m], dim(Z,)
-
-    # Number of points to skip on fine wavelength mesh
-    fact = int(emis[diag_com]['emis']['data'].shape[-1]/nlamb)
-
-    # Ensures wavelength data is monotonically increasing
-    lamb = emis[diag_com]['lambda']['data'][::fact]
-    flip = False
-    if np.mean(lamb[1:]-lamb[:-1])<0:
-        lamb = np.flip(lamb)
-        flip = True
-
-    # Adds mesh data
-    coll = utils._add_mesh_data(
-        coll=coll,
-        key_diag=key_diag,
-        key_cam=key_cam,
-        conf=conf,
-        case='rad_emis',
-        R_knots=R_knots,
-        Z_knots=Z_knots,
-        lamb = lamb, # [AA]
-        rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data']).T
-        )
-
-    ########### ----- Add emissivity data ------ ############
-
-    # Interpolates from transport grid onto regular grid
-    nR, nZ = R_knots.size, Z_knots.size
-    RR_knots = np.repeat(R_knots[:, None], nZ, axis=1) # dim(mesh_R, mesh_Z)
-    ZZ_knots = np.repeat(Z_knots[None, :], nR, axis=0) # dim(mesh_R, mesh_Z)
-    emis2d_tmp_m0 = _interp_emis(
-        emis=emis[diag_com]['emis']['data'], # dim(fm_rhop, fm_theta, fm_nlamb)
-        eta=emis[diag_com]['eta']['data'], # dim(fm_nlamb)
-        nlamb=nlamb,
-        fact=fact,
-        RR_knots=RR_knots, # dim(mesh_R, mesh_Z)
-        ZZ_knots=ZZ_knots, # dim(mesh_R, mesh_Z)
-        RR_asym=emis['plasma']['rhop_contours']['R']['data'], # dim(fm_rhop, fm_theta),
-        ZZ_asym=emis['plasma']['rhop_contours']['Z']['data'], # dim(fm_rhop, fm_theta)
-        ) # dim(mesh_R, mesh_Z, nlamb)
-
-    if flip:
-        emis2d_tmp_m0 = np.flip(emis2d_tmp_m0, axis=-1)
-
-    # Add emissivity data
-    coll.add_data(
-        key='emis_'+key_diag,
-        data=emis2d_tmp_m0,
-        ref=('m0_bs1','mlamb_'+key_diag+'_bs1'),
-        units='ph/s/m3/sr/m',
-        )
-
-    # Output
-    return coll
-
 
 # Interpolating the emissivity data
 def _interp_emis(

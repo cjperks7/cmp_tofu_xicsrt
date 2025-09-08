@@ -9,16 +9,7 @@ Sep 9th, 2024
 
 # Modules
 import xicsrt
-
-if False:        # For debugging TOFU on git
-    import sys
-    sys.path.insert(0,'/home/cjperks/tofu')
-    import tofu as tf
-    print(tf.__file__)
-    print(tf.__version__)
-    sys.path.pop(0)
-else:
-    import tofu as tf
+import tofu as tf
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,15 +32,15 @@ __all__ = [
 # Simulates radially-peaked emissivity data...
 def run_rad_emis(
     coll = None,
-    key_diag = None,
-    key_cam = None,
-    config = None,
-    dvol = None,
     emis_file = None,
+    key_diag = None, key_cam = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
+    config = None,
     # HPC controls
-    run_xicsrt = True,
-    run_tofu = False,
+    run_xicsrt = True, run_tofu = False,
     dHPC = None,
+    dvol = None,
+    dvos_tf = None,
     dsave = None,
     ):
 
@@ -59,9 +50,10 @@ def run_rad_emis(
     # Prepares emissivity data
     coll = utils._prep_emis_tofu(
         coll = coll,
-        key_diag = key_diag,
-        key_cam = key_cam,
-        emis_file=emis_file,
+        emis_file = emis_file,
+        case = 'rad_emis',
+        key_diag = key_diag, #key_cam = key_cam,
+        key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
         nlamb = dHPC['nlamb'],
         )
 
@@ -80,8 +72,9 @@ def run_rad_emis(
     if run_tofu:
         dout['ToFu'] = _run_rad_emis_tofu(
             coll = coll,
-            key_diag = key_diag,
-            key_cam = key_cam,
+            key_diag = key_diag, key_cam = key_cam,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            dvos_tf = dvos_tf,
             )
 
     # Saves XICSRT data
@@ -180,51 +173,30 @@ def _run_rad_emis_xicsrt(
 # ... in ToFu
 def _run_rad_emis_tofu(
     coll = None,
-    key_diag = None,
-    key_cam = None,
+    key_diag = None, key_cam = None,
+    key_mesh = None, key_lamb = None, key_emis = None,
+    dvos_tf = None,
     ):
 
-    
-    # Computes VOS
-    _, coll = mv._run_mono_vol_tofu(
-        coll = coll,
-        key_diag = key_diag,
-        key_cam = key_cam,
-        key_mesh = 'm0',
-        lamb_vec = coll.ddata['mlamb_'+key_diag+'_k']['data'],
-        n0 = 181,
-        n1 = 101,
-        )
+    # Calculates VOS matrix if neccessary
+    if dvos_tf['run_vos']:
+        coll = utils._compute_vos_tofu(
+            coll = coll,
+            key_diag = key_diag,
+            key_mesh = key_mesh, key_lamb = key_lamb,
+            dvos_tf = dvos_tf
+            )
 
-    #coll.save(path='/home/cjperks/orcd/scratch/work/tofu_sparc/diags')
-    
-    # Computes signal with emissivity
-    dsig = coll.compute_diagnostic_signal(
-        key='flux_vos_'+key_diag,
-        key_diag=key_diag,
-        key_cam=[key_cam],
-        key_integrand='emis_'+key_diag,
-        key_ref_spectro=None,
-        method='vos',
-        res=None,
-        #method='los',
-        #res=0.001,
-        mode=None,
-        groupby=None,
-        val_init=None,
-        ref_com=None,
-        brightness=False,
-        spectral_binning=False,
-        dvos=None,
-        verb=False,
-        timing=False,
-        store=True,
-        returnas=dict,
+    # Calculates signal
+    dsig = utils._compute_signal_tofu(
+        coll = coll,
+        key_diag = key_diag, key_cam = key_cam,
+        key_emis = key_emis,
         )
 
     # Stores results
     dout = {}
-    dout['signal'] = dsig[key_cam]['data'] # dim(nx,ny), [photons/bin^2]
+    dout['signal'] = dsig[key_cam]['data'] # dim(nx,ny), [photons/s/bin^2]
     
     # Stores detector configuration
     dout = utils._add_det_data(

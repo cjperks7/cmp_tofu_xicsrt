@@ -19,7 +19,9 @@ import cmp_tofu_xicsrt.setup._def_diag as dd
 __all__ = [
     '_add_det_data',
     '_get_dispersion_xicsrt',
-    '_add_mesh_data',
+    '_build_RZ_mesh_tofu',
+    '_build_lamb_mesh_tofu',
+    '_build_emis_mesh_tofu',
     ]
 
 ############################################
@@ -126,64 +128,77 @@ def _get_dispersion_xicsrt(
 
 ############################################
 #
-#           Mesh data
+#           TOFU-specific Mesh data
 #
 ############################################
 
-# Adds (R,Z) and wavelength mesh data to Collection object
-def _add_mesh_data(
+# Adds emissivity mesh data to Collection object
+def _build_emis_mesh_tofu(
     coll = None,
-    key_diag = None,
-    key_cam = None,
+    key_mesh = None,
+    key_lamb = None,
+    key_emis = None,
+    # Data
+    emis_RZ = None, # dim(R,Z,lambda); [ph/s/m3/sr/m]
+    emis_1d = None, # dim(lambda,); [ph/s/m3/sr/m]
+    ):
+
+    # Adds emissivity data
+    eunit = 'ph/s/m3/sr/m'
+    
+    if emis_1d is not None:
+        coll.add_data(
+            key='emis_1d',
+            data=emis_1d,
+            ref='%s_bs1'%(key_lamb),
+            units=eunit,
+            )
+    
+    coll.add_data(
+        key=key_emis,
+        data=emis_RZ,
+        ref=('%s_bs1'%(key_mesh), '%s_bs1'%(key_lamb)),
+        units=eunit,
+        )
+
+    # Output
+    return coll
+
+# Adds (R,Z) mesh data to Collection object
+def _build_RZ_mesh_tofu(
+    coll = None,
+    key_mesh = None,
     conf = None,
-    case = 'simple',
+    case = None,
     dplasma = None,
     # Data for flux-function map
     R_knots = None,
     Z_knots = None,
-    lamb = None, 
     rhop_RZ = None,
     ):
 
     # If just want to consider a "square O-ring" shaped plasma
-    if case == 'simple':
-        # -------------------------
-        # add mesh to compute vos
-        # ------------------------
+    if case in ['mv', 'me']:
 
         # Gets default plasma geometry
         if dplasma is None:
-            ########### ----- Add (R,Z) mesh ------ ############
-
             dplasma = dp.get_dplasma(option='default')
-            coll.add_mesh_2d_rect(
-                key='mRZ',
-                res=0.01,
-                crop_poly=dplasma['crop_poly'],
-                deg = 1,
-                )
-
-            ########### ----- Add wavelength mesh ------ ############
-
-            # Builds wavelength mesh, [AA], [1/AA], dim(nlamb,)
-            lamb_vec, _ = utils._build_gaussian(lamb0=lamb)
-
-            # Adds data to collection object
-            coll.add_mesh_1d(
-                key='mlamb',
-                knots=lamb_vec*1e-10,
-                deg=1,
-                units='m',
-                )
+            
+        # Defines 2D R,Z rectangular mesh
+        coll.add_mesh_2d_rect(
+            key=key_mesh,
+            res=0.01,
+            crop_poly=dplasma['crop_poly'],
+            deg = 1,
+            )
 
     # If adding flux-function mapping
-    elif case == 'rad_emis':
-        ########### ----- Add (R,Z) mesh ------ ############
+    elif case in ['rad_emis']:
 
         # Defines 2D R,Z rectangular mesh
         coll.add_mesh_2d_rect(
             # naming
-            key='m0',
+            key=key_mesh,
             # parameters
             domain=None,
             res=None,            # if res is provided, assumes a uniform mesh, for rectangular use res = [resR, resZ]
@@ -196,7 +211,7 @@ def _add_mesh_data(
 
         # Add a 2d bsplines basis on that mesh
         coll.add_bsplines(
-            key='m0',
+            key=key_mesh,
             deg=1
             )
 
@@ -206,9 +221,10 @@ def _add_mesh_data(
         coll.add_data(
             key='rhop2d',
             data= rhop_RZ,
-            ref=('m0_bs1')
+            ref=('%s_bs1'%(key_mesh))
             )
 
+        '''
         # Add polar mesh based on rhops2d, and associated radial bsplines of degree 2
         nvert  = coll.dobj['camera'][key_cam]['dgeom']['shape'][-1] # Number of pixels in imaging (i.e. vertical) direction
         degbs_1d = 2
@@ -223,16 +239,25 @@ def _add_mesh_data(
             subkey='rhop2d',
             deg=degbs_1d,
             )
+        '''
 
-        ########### ----- Add wavelength mesh ------ ############
+    # Output
+    return coll
 
-        # Adds data to collection object
-        coll.add_mesh_1d(
-            key='mlamb_'+key_diag,
-            knots=lamb*1e-10,
-            deg=1,
-            units='m',
-            )
+# Adds wavelength mesh to Collection object
+def _build_lamb_mesh_tofu(
+    coll = None,
+    key_lamb = None,
+    lamb_vec = None,    # [AA]
+    ):
+
+    # Adds data to collection object
+    coll.add_mesh_1d(
+        key=key_lamb,
+        knots=lamb_vec*1e-10,
+        deg=1,
+        units='m',
+        )
 
     # Output
     return coll

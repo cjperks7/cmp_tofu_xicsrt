@@ -34,35 +34,38 @@ def main(
     # ToFu data
     lamb0=1.61, # [AA]
     coll_tf = None,
-    key_diag = 'valid',
-    key_cam = 'cam',
+    key_diag = 'valid', key_cam = 'cam',
+    key_mesh = 'mRZ', key_lamb = 'mlamb', key_emis = 'emis',
     subcam = None,
     doptics = None,
     # XICSRT data
     cry_shape = 'Spherical',
     niter = 5,
     # Monochromatic, point source controls
-    pt_run = False,
-    dpt = None,     # Resolution controls
+    pt_run = False, dpt = None,     # Resolution controls
     # Monochromatic, volumetric source controls
-    vol_run = False,
-    dvol = None,    # Resolution controls
+    vol_run = False, dvol = None,    # Resolution controls
     # Multi-energy, volumetric source controls
     me_run = False,
     # Radially-peaked emissivity data
-    rad_run = False,
-    emis_file = None,
+    rad_run = False, emis_file = None,
     # Spectral-/spatial-resolution data
-    res_run = False,
-    dres = None,
+    res_run = False, dres = None,
     # Velocity control
-    add_velocity = False,
-    dvel = None,
+    add_velocity = False, dvel = None,
     # HPC controls
-    run_xicsrt = True,
-    run_tofu = False,
+    run_xicsrt = True, run_tofu = False,
     dHPC = None,
     dsave = None,
+    dvos_tf = {
+        'run_vos': True,
+        'res_RZ': [0.01, 0.01],
+        'res_phi': 0.0005,
+        'n0': 181,
+        'n1': 101,
+        'save': False,
+        'path': '/home/cjperks/orcd/scratch/work/tofu_sparc/diags',
+        },     # Controls for TOFU VOS computation
     ):
 
     # Builds ToFu diagnostic
@@ -89,17 +92,14 @@ def main(
     if pt_run:
         dout = calc.run_mono_pt(
             coll = coll,
-            key_diag = key_diag,
-            key_cam = key_cam,
+            lamb0 = lamb0,
+            key_diag = key_diag, key_cam = key_cam,
             config = config,
             cry_shape = cry_shape,
             dpt = dpt,
-            lamb0 = lamb0,
-            run_xicsrt=run_xicsrt,
-            run_tofu=run_tofu,
+            run_xicsrt=run_xicsrt, run_tofu=run_tofu,
             dsave = dsave,
-            add_velocity = add_velocity,
-            dvel = dvel,
+            add_velocity = add_velocity, dvel = dvel,
             )
 
     ########## Monochromatic, volumetric source 
@@ -108,19 +108,18 @@ def main(
     if vol_run:
         dout = calc.run_mono_vol(
             coll = coll,
-            key_diag = key_diag,
-            key_cam = key_cam,
-            config = config,
-            dvol = dvol,
             lamb0 = lamb0,
+            key_diag = key_diag, key_cam = key_cam,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            config = config,
             subcam = subcam,
-            add_velocity = add_velocity,
-            dvel = dvel,
+            add_velocity = add_velocity, dvel = dvel,
             # HPC controls
-            run_xicsrt=run_xicsrt,
-            run_tofu=run_tofu,
+            run_xicsrt=run_xicsrt, run_tofu=run_tofu,
             dHPC = dHPC,
+            dvol = dvol,
             dsave = dsave,
+            dvos_tf = dvos_tf,
             )
 
 
@@ -128,33 +127,33 @@ def main(
     if me_run:
         dout = calc.run_multi_vol(
             coll = coll,
-            key_diag = key_diag,
-            key_cam = key_cam,
-            config = config,
-            dvol = dvol,
             lamb0 = lamb0,
+            key_diag = key_diag, key_cam = key_cam,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            config = config,
             subcam = subcam,
             # HPC controls
-            run_xicsrt=run_xicsrt,
-            run_tofu=run_tofu,
+            run_xicsrt=run_xicsrt, run_tofu=run_tofu,
             dHPC = dHPC,
-            dsave = dsave
+            dvol = dvol,
+            dsave = dsave,
+            dvos_tf = dvos_tf,
             )
 
     ########## Radially-peaked emissivity data
     if rad_run:
         dout = calc.run_rad_emis(
             coll = coll,
-            key_diag = key_diag,
-            key_cam = key_cam,
-            config = config,
-            dvol = dvol,
             emis_file = emis_file,
+            key_diag = key_diag, key_cam = key_cam,
+            key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+            config = config,
             # HPC controls
-            run_xicsrt=run_xicsrt,
-            run_tofu=run_tofu,
+            run_xicsrt=run_xicsrt, run_tofu=run_tofu,
             dHPC = dHPC,
-            dsave = dsave
+            dvol = dvol,
+            dsave = dsave,
+            dvos_tf = dvos_tf,
             ) 
 
     ########## Spatial-/spectral-resolution data

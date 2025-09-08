@@ -6,3 +6,4 @@ from ._conv import *
 from ._emis import *
 from ._hists import *
 from ._data import *
+from ._vos import *
