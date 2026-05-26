@@ -183,11 +183,14 @@ def _run_mono_pt_xicsrt(
     #print(vpt)
 
     # Defines the vertical and binormal directions
-    vert = [
-        -1,
-        vpt[0]/vpt[1],
-        0
-        ]
+    if abs(vpt[1]) > 0:
+        vert = [
+            -1,
+            vpt[0]/vpt[1],
+            0
+            ]
+    else:
+        vert = [0,1,0]
     vert /= np.linalg.norm(vert)
     binorm = np.cross(vert, vpt)
 

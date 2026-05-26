@@ -34,9 +34,13 @@ def plt_mono_pt(
     cry_shape = 'Spherical',
     lamb0 = None, # [AA]
     dout = None,
+    # Controls
     dpt = None,
     plt_rc = False,
+    norm_by_bin = True,
+    dt = 1, # [s], integration time
     ):
+    ### NOTE: signal in units [ph/bin^2/s]
 
     # Gets default values
     if dpt is None:
@@ -46,75 +50,83 @@ def plt_mono_pt(
     dxi = dout['XICSRT']
     dtf = dout['ToFu']
 
-    dx_xi = np.mean(abs(dxi['cents_cm'][0][1:] - dxi['cents_cm'][0][:-1]))
-    dy_xi = np.mean(abs(dxi['cents_cm'][1][1:] - dxi['cents_cm'][1][:-1]))
-    dx_tf = np.mean(abs(dtf['cents_cm'][0][1:] - dtf['cents_cm'][0][:-1]))
-    dy_tf = np.mean(abs(dtf['cents_cm'][1][1:] - dtf['cents_cm'][1][:-1]))
+    # Init
+    scalex = {}
+    vmaxx = 0
+    cntsx = 0
+    for ii, kk in enumerate(dout.keys()):
 
-    # Rescale ToFu if different pixel binning
-    #scalet_0 = (
-    #    dtf['npix'][0]/dxi['npix'][0]
-    #    *dtf['npix'][1]/dxi['npix'][1]
-    #    )
-    #scalet_1 = (
-    #    dtf['npix'][1]/dxi['npix'][1]
-    #    )
-    scalet_0 = (
-        dx_tf/dx_xi
-        *dy_tf/dy_tf
-        )
-    scalet_1 = (
-        dy_tf/dy_xi
-        )
-    
+        scalex[kk] = {}
 
-    cmax = np.max((
-        np.max(dxi['signal'].flatten()),
-        np.max(dtf['signal'].flatten())*scalet_0
-        ))
+        # If normalizing by bin length
+        if norm_by_bin:
+            scalex[kk]['h'] = (
+                1
+                /np.mean(np.diff(dout[kk]['cents_cm'][0]))
+                ) # [1/cm], horizontal bin width
+            scalex[kk]['v'] = (
+                1
+                /np.mean(np.diff(dout[kk]['cents_cm'][1]))
+                ) # [1/cm], vertical bin width
+            scalex[kk]['hv'] = scalex[kk]['h']*scalex[kk]['v'] # [1/cm^2], bin area
+
+            # Time-integration
+            scalex[kk]['v'] *= dt
+            scalex[kk]['h'] *= dt
+            scalex[kk]['hv'] *= dt
+
+            label_hv = r'#$ph/cm^2$'
+            label_h = label_v = r'#$ph/cm$'
+        else:
+            # Time-integration
+            scalex[kk]['h'] = scalex[kk]['v'] = scalex[kk]['hv'] = dt
+
+            label_hv = r'#$ph/bin^2$'
+            label_h = label_v = r'#$ph/bin$'
+
+        vmaxx = np.max(np.r_[vmaxx, np.max(dout[kk]['signal'].flatten())*scalex[kk]['hv']])
+        cntsx += np.sum(dout[kk]['signal'].flatten()*dt)
 
     # Plots photon flux on detector from XICSRT
     fig, ax = plt.subplots(1,2)
     im = ax[1].imshow(
-        dxi['signal'].T, # normalize [# ph] detected by [# ph] emitted
-        extent = dxi['extent'],
+        dxi['signal'].T*scalex['XICSRT']['hv'], # normalize [# ph] detected by [# ph] emitted
+        extent = np.asarray(dxi['extent'])*100,
         interpolation='nearest',
         origin='lower',
         vmin=0,
-        vmax=np.max(dxi['signal'].flatten()),
-        aspect = dxi['aspect']
+        vmax=np.max(dxi['signal'].flatten())*scalex['XICSRT']['hv'],
+        aspect = 1,
         )
-    cb = plt.colorbar(im, ax=ax, orientation='vertical')
+    cb = plt.colorbar(im, ax=ax[1], orientation='vertical')
+    cb.set_label(label_hv)
     ax[1].set_title('XICSRT, # ph detected = %1.5e'%(
-        np.sum(dxi['signal'].flatten())
+        np.sum(dxi['signal'].flatten())*dt
         ), color = 'blue')
-    ax[1].set_xlabel('horizontal bin')
+    ax[1].set_xlabel('horz. bin [cm]')
 
 
     im1 = ax[0].imshow(
-        dtf['signal'].T*scalet_0,
-        #extent = extent,
-        extent = dtf['extent'],
+        dtf['signal'].T*scalex['ToFu']['hv'],
+        extent = np.asarray(dtf['extent'])*100,
         interpolation='nearest',
         origin='lower',
         vmin=0,
-        vmax=np.max(dtf['signal'].flatten())*scalet_0,
-        aspect = dtf['aspect']
+        vmax=np.max(dtf['signal'].flatten())*scalex['ToFu']['hv'],
+        aspect = 1,
         )
     #cb = plt.colorbar(im1, ax=ax1, orientation='horizontal')
     ax[0].set_title('ToFu, # ph detected = %1.5e'%(
-        np.sum(dtf['signal'].flatten())*scalet_0
+        np.sum(dtf['signal'].flatten())*dt
         ), color = 'red')
-    ax[0].set_xlabel('horizontal bin')
-    ax[0].set_ylabel('vertical bin')
-    cb.set_label('#ph/bin^2')
+    ax[0].set_xlabel('horz. bin [cm]')
+    ax[0].set_ylabel('vert. bin [cm]')
+    cb1 = plt.colorbar(im1, ax=ax[0], orientation='vertical')
+    cb1.set_label(label_hv)
 
 
 
 
-
-
-    
 
     fig.set_size_inches(20, 8)
 
@@ -137,16 +149,16 @@ def plt_mono_pt(
     pa = 20
 
     ax2[0].plot(
+        dxi['signal'][xind,:]*scalex['XICSRT']['hv'],
         dxi['cents_cm'][1],
-        dxi['signal'][xind,:],
         'b*-',
         label = 'XICSRT',
         linewidth = lw,
         markersize = ms
         )
     ax2[0].plot(
+        dtf['signal'][xind_tf,:]*scalex['ToFu']['hv'],
         dtf['cents_cm'][1],
-        dtf['signal'][xind_tf,:]*scalet_0,
         'r*-',
         label = 'ToFu',
         linewidth = lw,
@@ -154,8 +166,8 @@ def plt_mono_pt(
         )
 
     ax2[0].grid('on')
-    ax2[0].set_xlabel('vertical bin')
-    ax2[0].set_ylabel('# photons/bin^2')
+    ax2[0].set_ylabel('vert. bin [cm]')
+    ax2[0].set_xlabel(label_hv)
     leg = ax2[0].legend()
     leg.set_draggable('on')
     ax2[0].set_title('horiz. bin %0.0i/%0.0i'%(
@@ -165,16 +177,16 @@ def plt_mono_pt(
         )
 
     ax2[1].plot(
+        np.sum(dxi['signal'],axis=0)*scalex['XICSRT']['v'],
         dxi['cents_cm'][1],
-        np.sum(dxi['signal'],axis=0),
         'b*-',
         label = 'XICSRT',
         linewidth = lw,
         markersize = ms
         )
     ax2[1].plot(
+        np.sum(dtf['signal'],axis=0)*scalex['ToFu']['v'],
         dtf['cents_cm'][1],
-        np.sum(dtf['signal'],axis=0)*scalet_1,
         'r*-',
         label = 'ToFu',
         linewidth = lw,
@@ -182,8 +194,8 @@ def plt_mono_pt(
         )
     ax2[1].set_title('int. over all horiz. bin', pad = pa)
     ax2[1].grid('on')
-    ax2[1].set_xlabel('vertical bin')
-    ax2[1].set_ylabel('# photons/bin')
+    ax2[1].set_ylabel('vert. bin [cm]')
+    ax2[1].set_xlabel(label_v)
     
     #ax2.set_ylim(0, 5e-12)
     fig2.suptitle('Detector binned (%0.0i, %0.0i), point = [%1.2f, %1.2f, %1.2f] m'%(
@@ -194,20 +206,20 @@ def plt_mono_pt(
         )
 
     ymax = np.max((
-        np.max(np.sum(dxi['signal'], axis=0)),
-        np.max(np.sum(dtf['signal'],axis=0))*scalet_1
+        np.max(np.sum(dxi['signal'], axis=0))*scalex['XICSRT']['v'],
+        np.max(np.sum(dtf['signal'],axis=0))*scalex['ToFu']['v']
         ))
-    ax2[0].set_ylim(0,1.1*ymax)
-    ax2[1].set_ylim(0,1.1*ymax)
+    #ax2[0].set_ylim(0,1.1*ymax)
+    #ax2[1].set_ylim(0,1.1*ymax)
 
     fig2.set_size_inches(10,8)
 
     # Integrated photons on detector
-    print('Normalized # ph detected')
+    print('Total # ph detected')
     print('ToFu')
-    print(np.sum(dtf['signal'].flatten())*scalet_0)
+    print(np.sum(dtf['signal'].flatten())*dt)
     print('XICSRT')
-    print(np.sum(dxi['signal'].flatten()))
+    print(np.sum(dxi['signal'].flatten())*dt)
 
 
     #####################################################################
@@ -226,23 +238,23 @@ def plt_mono_pt(
     ax30 = fig3.add_subplot(gs3[1,0])
 
     im = ax30.imshow(
-        dxi['signal'].T, # normalize [# ph] detected by [# ph] emitted
+        dxi['signal'].T*scalex['XICSRT']['hv'], # normalize [# ph] detected by [# ph] emitted
         extent = np.asarray(dxi['extent'])*100,
         interpolation='nearest',
         origin='lower',
         vmin=0,
-        vmax=np.max(dxi['signal'].flatten()),
+        vmax=np.max(dxi['signal'].flatten())*scalex['XICSRT']['hv'],
         aspect = 'equal'
         )
 
     ax30.set_title('XICSRT, #ph detected = %1.3e'%(
-        np.sum(dxi['signal'].flatten())
+        np.sum(dxi['signal'].flatten())*dt
         ), color = 'blue')
     ax30.set_xlabel('horiz. bin [cm]')
     ax30.set_ylabel('vert. bin [cm]')
 
     cb = fig3.colorbar(im, ax=ax30, orientation='vertical')
-    cb.set_label(r'signal [#ph/bin$^2$]')
+    cb.set_label(r'signal [%s]'%(label_hv))
 
     ax30.text(0.05, 0.90, '(b)', color = 'w', transform=ax30.transAxes)
 
@@ -252,24 +264,24 @@ def plt_mono_pt(
 
 
     im1 = ax31.imshow(
-        dtf['signal'].T*scalet_0,
+        dtf['signal'].T*scalex['ToFu']['hv'],
         #extent = extent,
         extent = np.asarray(dtf['extent'])*100,
         interpolation='nearest',
         origin='lower',
         vmin=0,
-        vmax=np.max(dtf['signal'].flatten())*scalet_0,
+        vmax=np.max(dtf['signal'].flatten())*scalex['ToFu']['hv'],
         aspect = 'equal'
         )
     ax31.set_title('ToFu, #ph detected = %1.3e'%(
-        np.sum(dtf['signal'].flatten())
+        np.sum(dtf['signal'].flatten())*dt
         ), color = 'red')
     ax31.set_xlabel('horiz. bin [cm]')
     ax31.set_ylabel('vert. bin [cm]')
 
     #cb = fig3.colorbar(im, ax=[ax30, ax31], orientation='vertical')
     cb = fig3.colorbar(im, ax=ax31, orientation='vertical')
-    cb.set_label(r'signal [#ph/bin$^2$]')
+    cb.set_label(r'signal [%s]'%(label_hv))
 
     ax31.text(0.05, 0.90, '(a)', color = 'w', transform=ax31.transAxes)
 
@@ -277,9 +289,7 @@ def plt_mono_pt(
     ax3 = fig3.add_subplot(gs3[0,1])
 
     ax3.plot(
-        #dxi['cents_cm'][1],
-        #dxi['signal'][xind,:],
-        dxi['signal'][xind,:]*1e12,
+        dxi['signal'][xind,:]*scalex['XICSRT']['hv'],
         dxi['cents_cm'][1],
         'bD-',
         label = 'XICSRT',
@@ -287,9 +297,7 @@ def plt_mono_pt(
         markersize = ms
         )
     ax3.plot(
-        #dtf['cents_cm'][1],
-        #dtf['signal'][xind_tf,:]*scalet_0,
-        dtf['signal'][xind_tf,:]*scalet_0*1e12,
+        dtf['signal'][xind_tf,:]*scalex['ToFu']['hv'],
         dtf['cents_cm'][1],
         'ro-',
         label = 'ToFu',
@@ -301,7 +309,7 @@ def plt_mono_pt(
     #ax3.set_xlabel('vert. bin [cm]')
     #ax3.set_ylabel(r'signal [#ph/bin$^2$]')
     ax3.set_ylabel('vert. bin [cm]')
-    ax3.set_xlabel(r'signal [1e-12 #ph/bin$^2$]')
+    ax3.set_xlabel(r'signal [%s]'%(label_hv))
 
     leg = ax3.legend(labelcolor='linecolor')
     leg.set_draggable('on')
@@ -312,7 +320,7 @@ def plt_mono_pt(
         )
 
     #ax3.set_ylim(0,1.1*ymax)
-    ax3.set_xlim(0,1.1*ymax*1e12)
+    #ax3.set_xlim(0,1.1*ymax)
 
     ax3.text(0.05, 0.90, '(c)', color = 'k', transform=ax3.transAxes)
 
@@ -321,9 +329,7 @@ def plt_mono_pt(
     ax3 = fig3.add_subplot(gs3[1,1])
 
     ax3.plot(
-        #dxi['cents_cm'][1],
-        #np.sum(dxi['signal'],axis=0),
-        np.sum(dxi['signal'],axis=0)*1e12,
+        np.sum(dxi['signal'],axis=0)*scalex['XICSRT']['v'],
         dxi['cents_cm'][1],
         'bD-',
         label = 'XICSRT',
@@ -331,9 +337,7 @@ def plt_mono_pt(
         markersize = ms
         )
     ax3.plot(
-        #dtf['cents_cm'][1],
-        #np.sum(dtf['signal'],axis=0)*scalet_1,
-        np.sum(dtf['signal'],axis=0)*scalet_1*1e12,
+        np.sum(dtf['signal'],axis=0)*scalex['ToFu']['v'],
         dtf['cents_cm'][1],
         'ro-',
         label = 'ToFu',
@@ -342,13 +346,11 @@ def plt_mono_pt(
         )
     ax3.set_title('int. over all horiz. bin', pad = 0)
     ax3.grid('on')
-    #ax3.set_xlabel('vert. bin [cm]')
-    #ax3.set_ylabel('signal [#ph/bin]')
     ax3.set_ylabel('vert. bin [cm]')
-    ax3.set_xlabel('signal [1e-12 #ph/bin]')
+    ax3.set_xlabel('signal [%s]'%(label_v))
     
     #ax3.set_ylim(0,1.1*ymax)
-    ax3.set_xlim(0,1.1*ymax*1e12)
+    #ax3.set_xlim(0,1.1*ymax)
 
     ax3.text(0.05, 0.90, '(d)', color = 'k', transform=ax3.transAxes)
 
