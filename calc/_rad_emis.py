@@ -51,7 +51,7 @@ def run_rad_emis(
     coll = utils._prep_emis_tofu(
         coll = coll,
         emis_file = emis_file,
-        case = 'rad_emis',
+        case = 'emis',
         key_diag = key_diag, #key_cam = key_cam,
         key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
         nlamb = dHPC['nlamb'],

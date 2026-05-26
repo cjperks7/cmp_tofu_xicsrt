@@ -36,7 +36,6 @@ def _conv_2normEmis(
     '''
     If point-source: normalize to 1 ph/s
     If volumetric source: normalize to 1 ph/s/cm^3
-    *assuming num_rays= flux from a steady-state plasma over 1s
     '''
 
     # Init
@@ -212,7 +211,7 @@ def _prep_emis_tofu(
             )
 
     # If running an emissivity map from tofu_sparc
-    elif case == 'rad_emis':
+    elif case == 'emis':
         coll = _build_emis_tfs(
             coll = coll,
             key_diag = key_diag,
