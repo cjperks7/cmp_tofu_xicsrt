@@ -57,7 +57,7 @@ def _plt_image(
     
     ax.set_title('%s, # ph detected = %1.5e'%(
         tag, 
-        np.sum(ddata['signal'].flatten())
+        np.nansum(ddata['signal'].flatten())
         ), color = color)
     ax.set_xlabel('horiz. bin [cm]')
     ax.set_ylabel('vert. bin [cm]')
@@ -134,7 +134,7 @@ def _plt_slice(
     # If integreated over all horizontal channels
     elif do_horz_int:
         ax.plot(
-            np.sum(ddata['signal'],axis=0)*scale['v']*factor,
+            np.nansum(ddata['signal'],axis=0)*scale['v']*factor,
             ddata['cents_cm'][1],
             '-',
             color = color,
@@ -152,7 +152,7 @@ def _plt_slice(
             ax.set_title('int. over all horiz. bin', pad = 0)
 
         if do_zoom:
-            indz = np.argmax(np.sum(ddata['signal'],axis=0))
+            indz = np.argmax(np.nansum(ddata['signal'],axis=0))
             zmax = np.min(np.r_[
                 np.max(ddata['cents_cm'][1])+np.mean(np.diff(ddata['cents_cm'][1])),
                 ddata['cents_cm'][1][indz] + dcm
@@ -203,7 +203,7 @@ def _plt_slice(
     elif do_vert_int:
         ax.plot(
             ddata['cents_cm'][0],
-            np.sum(ddata['signal'],axis=1)*scale['h']*factor,
+            np.nansum(ddata['signal'],axis=1)*scale['h']*factor,
             '-',
             color = color,
             marker = marker,
@@ -220,7 +220,7 @@ def _plt_slice(
             ax.set_title('int. over all vert. bin', pad = 0)
         
         if do_zoom:
-            indz = np.argmax(np.sum(ddata['signal'],axis=1))
+            indz = np.argmax(np.nansum(ddata['signal'],axis=1))
             zmax = np.min(np.r_[
                 np.max(ddata['cents_cm'][0])+np.mean(np.diff(ddata['cents_cm'][0])),
                 ddata['cents_cm'][0][indz] + dcm
@@ -390,7 +390,7 @@ def plt_mono_vol(
             # Indexing
             if ii == 0 and kk == 'ToFu':
                 indyt = int(ddata[kk]['npix'][1]/2-1)
-                indxt = np.argmax(np.sum(ddata[kk]['signal'], axis=1))
+                indxt = np.argmax(np.nansum(ddata[kk]['signal'], axis=1))
             elif ii == 0 and kk == 'XICSRT':
                 indy = np.argmin(abs(
                     ddata['ToFu']['cents_cm'][1][indyt] - ddata[kk]['cents_cm'][1]
@@ -459,8 +459,8 @@ def plt_mono_vol(
         print('%0.2f %%'%(
             (
                 1
-                -np.sum(ddata['XICSRT']['signal'].flatten())
-                /np.sum(ddata['ToFu']['signal'].flatten())
+                -np.nansum(ddata['XICSRT']['signal'].flatten())
+                /np.nansum(ddata['ToFu']['signal'].flatten())
                 )*100
             )) #
 
