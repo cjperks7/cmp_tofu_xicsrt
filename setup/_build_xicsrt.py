@@ -125,6 +125,7 @@ def _init_config(
 
     # Spherical crystal controls
     if cry_shape == 'Spherical':
+        print('Sperical, 1')
         # Object orientation
         config['optics']['crystal']['zaxis'] = utils._tofu2xicsrt(
             data = dgeom_cryst['nin'] # Normal
@@ -150,6 +151,7 @@ def _init_config(
         config['optics']['crystal']['radius'] = dgeom_cryst['curve_r'][0] # [m]
 
     elif cry_shape == 'Cylindrical':
+        print('Cylindrical, 2')
         # Object type
         config['optics']['crystal']['class_name'] = 'XicsrtOpticCylindricalCrystal'
         
@@ -202,6 +204,33 @@ def _init_config(
         else:
             print('ERROR IN CRYSTAL RADIUS!!!')
 
+    elif cry_shape == 'Conical':
+        print('Conical, 3')
+        ### NOTE: Right now coded to handle for the "defocused" von Hamo ToFu object
+
+        # Object type
+        config['optics']['crystal']['class_name'] = 'XicsrtOpticConicalCrystal'
+        
+        # Normal orientation
+        config['optics']['crystal']['zaxis'] = utils._tofu2xicsrt(
+            data = dgeom_cryst['nin'] # Normal
+            )
+
+        # Conical orientation
+        config['optics']['crystal']['xaxis'] = utils._tofu2xicsrt(
+            data = dgeom_cryst['e0']  
+            ) # NOTE: XICSRT assumes "xaxis" is the surface axis (towards apex)
+
+        # Object size
+        config['optics']['crystal']['xsize'] = (
+            2*dgeom_cryst['extenthalf'][0]
+            #*dgeom_cryst['curve_r'][0]
+            ) # [m], Horizontal size
+        config['optics']['crystal']['ysize'] = (
+            2*dgeom_cryst['extenthalf'][1]
+            *dgeom_cryst['curve_r'][1]
+            ) # [m], Vertical size
+
     # Error check
     else:
         print('NOT IMPLEMENTED YET!!!')
@@ -210,6 +239,7 @@ def _init_config(
     if np.sum(np.cross(
         config['optics']['crystal']['zaxis'], config['optics']['crystal']['xaxis']
         )) < 0:
+        if cry_shape != 'Conical':
             config['optics']['crystal']['xaxis'] *= -1
 
     # Rocking curve
@@ -245,6 +275,8 @@ def _init_config(
     config['optics']['detector']['xaxis']  = -1*utils._tofu2xicsrt(
         data = dgeom_cam['e0']  # Horizontal
         )
+    #config['optics']['detector']['zaxis'] = np.r_[-0.9966728 ,  0.        , -0.08150665]
+    #config['optics']['detector']['xaxis'] = -1*np.r_[ 0.08150665,  0.        , -0.9966728 ]
 
     # Assures y-axis is up
     if np.sum(np.cross(
@@ -261,6 +293,77 @@ def _init_config(
         dgeom_cam['shape'][1]
         *2*dgeom_cam['extenthalf'][1]
         ) # [m], Vertical
+
+
+    ### extra data for a cone
+    sconf = config['optics']
+    if sconf['crystal']['class_name'] == 'XicsrtOpticConicalCrystal':
+        print('Extra Cone')
+        kap = lkey_ap[0]
+
+        xap = np.asarray(sconf[kap]['origin'])
+        nap = np.asarray(sconf[kap]['zaxis'])  # points away from the crystal
+
+        xc = np.asarray(sconf['crystal']['origin'])
+        saxis = np.asarray(sconf['crystal']['xaxis'])   # point toward from the apex/detector
+        yaxis = np.cross(saxis, np.asarray(sconf['crystal']['zaxis']))  # points up
+
+        # Makes sure the aperture origin is at the same height as the crystal
+        tap = abs(np.dot(yaxis,xc)- np.dot(yaxis, xap))
+        if tap >= 1e-10:
+            xap -= tap*yaxis
+
+        # Makes sure to look at a position on the detector that matches the Bragg condition wrt aperture-to-crystal ray
+        xd = np.asarray(sconf['detector']['origin'])
+        nd = np.asarray(sconf['detector']['zaxis'])     # points towards the crystal
+
+        theta_blaze = np.arccos(np.dot(nap, -1*saxis))     # [rad], Angle crystal is oriented for with aperture
+
+        from scipy.spatial.transform import Rotation
+        rot = Rotation.from_rotvec(-1*(np.pi - 2*theta_blaze) * yaxis)  # Clockwise rotation/ Bragg reflection
+
+        nd_blaze = rot.apply(nap)
+
+        # Calculates position on detector
+        denom = np.dot(nd, nd_blaze)
+        td = np.dot(nd,(xd- xc))/ denom   # [m]
+        xd_blaze = xc + td * nd_blaze   # [m], dim(3,)
+
+        # Cone axis
+        sconf['crystal']['caxis'] = (xap - xd_blaze)    # Direction of increasing radius, Ideally, detector to aperture
+        sconf['crystal']['caxis'] /= np.linalg.norm(sconf['crystal']['caxis'])
+
+        # Cone pitch
+        sconf['crystal']['alpha'] = np.arccos(
+            np.dot(
+                saxis, 
+                -1*sconf['crystal']['caxis']
+                )
+            )
+
+        lac = (xc - xap)
+
+        sconf['crystal']['beta'] = np.arccos(
+            np.dot(
+                lac/np.linalg.norm(lac), 
+                -1*sconf['crystal']['caxis']
+                )
+            )
+
+        # Distance to apex
+        sconf['crystal']['lapex'] = np.linalg.norm(lac) *(
+            np.sin(sconf['crystal']['beta'])
+            /np.sin(sconf['crystal']['alpha'])
+            )
+
+        # Cone apex
+        sconf['crystal']['apex'] = (
+            xc
+            + (
+                sconf['crystal']['lapex']
+                * saxis
+                )
+            )
 
     # Output geometry
     return config
