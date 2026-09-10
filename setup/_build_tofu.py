@@ -111,10 +111,16 @@ def _build_diag(
         dap = dd.get_dap(option=ap_option)
 
     # Adds aperture
-    coll.add_aperture(
-        key=ap_label,
-        **dap
-        )
+    common_ap = False # Avoid common aperture
+    if 'aperture' in coll.dobj.keys():
+        if ap_label in coll.dobj['aperture'].keys(): 
+            common_ap = True
+
+    if not common_ap:
+        coll.add_aperture(
+            key=ap_label,
+            **dap
+            )
 
     # Gets dafault crystal geometry
     if dcry is None:
