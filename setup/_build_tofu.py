@@ -172,7 +172,8 @@ def _build_diag(
                 dcam['outline_x0'] = 0.5* pix_width * np.r_[-1, 1, 1, -1]
                 dcam['cents_x0'] = (
                     dsub['xhalfsize'] * np.linspace(-1, 1, nx0) 
-                    + np.sum(dcam['e0']*dsub['dx'])
+                    #+ np.sum(dcam['e0']*dsub['dx'])
+                    + dsub['dx']
                     )
             if dsub['dy'] is not None:
                 #dcam['cent'] += dcam['e1']*dsub['dy']
@@ -185,7 +186,8 @@ def _build_diag(
                 dcam['outline_x1'] = 0.5* pix_height * np.r_[-1, -1, 1, 1]
                 dcam['cents_x1'] = (
                     dsub['yhalfsize'] * np.linspace(-1, 1, nx1) 
-                    + np.sum(dcam['e1']*dsub['dy'])
+                    #+ np.sum(dcam['e1']*dsub['dy'])
+                    + dsub['dy']
                     )
 
         # If user wants to zoom into a section of the detector on the same pixel mesh
