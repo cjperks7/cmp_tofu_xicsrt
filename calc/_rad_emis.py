@@ -128,7 +128,7 @@ def _run_rad_emis_xicsrt(
             ilamb = ii + lamb_num*lamb_lim,
             #ilamb = np.nanargmin(abs(coll.ddata['mlamb_'+key_diag+'_k']['data'] - ll*1e-10)),
             dlamb = np.mean(abs(lamb[1:]-lamb[:-1])), # [AA]
-            nlamb = len(coll.ddata['mlamb_'+key_diag+'_k']['data']),
+            nlamb = len(coll.ddata['mlamb_k']['data']),
             )
 
         # Calculates VOS-int per wavelength
