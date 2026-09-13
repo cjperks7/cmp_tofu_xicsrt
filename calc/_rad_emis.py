@@ -114,7 +114,7 @@ def _run_rad_emis_xicsrt(
     dout = {}
     lamb_lim = dHPC['lamb_lim']
     lamb_num = dHPC['lamb_num']     # Takes this specfic wavelength group
-    lamb = coll.ddata['mlamb_'+key_diag+'_k']['data'][lamb_num*lamb_lim:(lamb_num+1)*lamb_lim]*1e10 # [AA]
+    lamb = coll.ddata['mlamb_k']['data'][lamb_num*lamb_lim:(lamb_num+1)*lamb_lim]*1e10 # [AA]
 
     # Loop over wavelength
     for ii,ll in enumerate(lamb):
