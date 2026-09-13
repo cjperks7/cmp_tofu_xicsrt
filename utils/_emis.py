@@ -175,7 +175,7 @@ def _prep_emis_tofu(
             )['arr_0'][()]
         R_knots = demis['plasma']['RR']['data'] # [m], dim(R,)
         Z_knots = demis['plasma']['ZZ']['data'] # [m], dim(Z,)
-        rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data']).T
+        rhop_RZ=np.sqrt(demis['plasma']['PSIN_RZ']['data']).T
     else:
         R_knots = None
         Z_knots = None
