@@ -144,8 +144,8 @@ def _prep_emis_xicsrt(
             coll.ddata['emis']['data'][:,:,ilamb]
             * (4*np.pi) *1e-6 * 1e-10 # Converts from ph/s/m3/sr/m -> ph/s/cm3/AA
             ), # dim(mesh_R, mesh_Z); [ph/s/cm3/AA]
-        'mesh_R': coll.ddata['%s_k0'%(key_mesh)]['data'], # dim(mesh_R); [m]
-        'mesh_Z': coll.ddata['%s_k1'%(key_mesh)]['data'], # dim(mesh_Z); [m]
+        'mesh_R': coll.ddata['mRZ_k0']['data'], # dim(mesh_R); [m]
+        'mesh_Z': coll.ddata['mRZ_k1']['data'], # dim(mesh_Z); [m]
         'dlamb': dlamb, # dim(scalar); [AA]
         'nlamb': nlamb,
         'ilamb': ilamb,
