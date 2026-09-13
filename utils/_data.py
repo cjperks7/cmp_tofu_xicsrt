@@ -193,7 +193,7 @@ def _build_RZ_mesh_tofu(
             )
 
     # If adding flux-function mapping
-    elif case in ['rad_emis']:
+    elif case in ['emis']:
 
         # Defines 2D R,Z rectangular mesh
         coll.add_mesh_2d_rect(
