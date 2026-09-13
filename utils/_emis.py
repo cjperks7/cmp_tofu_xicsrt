@@ -173,8 +173,8 @@ def _prep_emis_tofu(
             emis_file,
             allow_pickle=True
             )['arr_0'][()]
-        R_knots = emis['plasma']['RR']['data'] # [m], dim(R,)
-        Z_knots = emis['plasma']['ZZ']['data'] # [m], dim(Z,)
+        R_knots = demis['plasma']['RR']['data'] # [m], dim(R,)
+        Z_knots = demis['plasma']['ZZ']['data'] # [m], dim(Z,)
         rhop_RZ=np.sqrt(emis['plasma']['PSIN_RZ']['data']).T
     else:
         R_knots = None
