@@ -121,7 +121,7 @@ def _build_diag(
         if not common_ap:
             coll.add_aperture(
                 key=kap,
-                **dap[kap]
+                **dap[kap.split('_')[0]]
                 )
 
     # Gets dafault crystal geometry
