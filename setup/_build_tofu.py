@@ -78,7 +78,7 @@ def _build_diag(
     # Labeling
     if doptics is not None:
         ap_option = doptics['key_diag']
-        ap_label = doptics['key_ap']
+        ap_labels = doptics['key_ap']
 
         cry_option = doptics['key_diag']
         mat_option = doptics['key_diag']
@@ -91,7 +91,7 @@ def _build_diag(
 
     else:
         ap_option = 'default'
-        ap_label = 'ap'
+        ap_labels = ['ap']
 
         cry_option = dcry
         mat_option = 'default'
@@ -110,17 +110,19 @@ def _build_diag(
     if dap is None:
         dap = dd.get_dap(option=ap_option)
 
-    # Adds aperture
-    common_ap = False # Avoid common aperture
-    if 'aperture' in coll.dobj.keys():
-        if ap_label in coll.dobj['aperture'].keys(): 
-            common_ap = True
+    # Loop over apertures
+    for aa, kap in enumerate(ap_labels):
+        # Adds aperture
+        common_ap = False # Avoid common aperture
+        if 'aperture' in coll.dobj.keys():
+            if kap in coll.dobj['aperture'].keys(): 
+                common_ap = True
 
-    if not common_ap:
-        coll.add_aperture(
-            key=ap_label,
-            **dap
-            )
+        if not common_ap:
+            coll.add_aperture(
+                key=kap,
+                **dap[kap]
+                )
 
     # Gets dafault crystal geometry
     if dcry is None:
@@ -238,7 +240,7 @@ def _build_diag(
     # Builds diagnostic
     coll.add_diagnostic(
         key = diag_label + ext_label,
-        doptics = {cam_label: [cry_label, ap_label]},
+        doptics = {cam_label: [cry_label]+ ap_labels},
         compute = True, # compute LOS
         compute_vos_from_los = True,
         convex = True,
