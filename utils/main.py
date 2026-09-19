@@ -65,6 +65,7 @@ def main(
         'n1': 101,
         'save': False,
         'path': '/home/cjperks/orcd/scratch/work/tofu_sparc/diags',
+        'dplasma': None,
         },     # Controls for TOFU VOS computation
     ):
 

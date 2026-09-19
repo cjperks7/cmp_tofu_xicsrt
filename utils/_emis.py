@@ -160,6 +160,7 @@ def _prep_emis_tofu(
     emis_file = None,
     lamb0 = None,
     conf = None,
+    dplasma = None,
     # R,Z discretization
     R_knots = None,
     Z_knots = None,
@@ -187,7 +188,7 @@ def _prep_emis_tofu(
         key_mesh = key_mesh,
         conf = conf,
         case = case,
-        dplasma = None,
+        dplasma = dplasma,
         # Data for flux-function map
         R_knots = R_knots,
         Z_knots = Z_knots,

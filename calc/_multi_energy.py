@@ -53,6 +53,7 @@ def run_multi_vol(
         lamb0 = lamb0,
         case = 'me',
         key_mesh = key_mesh, key_lamb = key_lamb, key_emis = key_emis,
+        dplasma = dvos_tf['dplasma'],
         )
 
     # Runs XICSRT
