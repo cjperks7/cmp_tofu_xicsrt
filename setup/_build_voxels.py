@@ -267,9 +267,6 @@ def _build_omegas(
         ax[1].set_xlabel('R [m]')
         ax[1].set_ylabel('Z [cm]')
 
-    import pdb
-    pdb.set_trace()
-
     # Output
     return omega_norm, omega_vert, omega_binorm, omega_dl
 
