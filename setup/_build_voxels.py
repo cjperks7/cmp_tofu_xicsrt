@@ -9,6 +9,7 @@ Aug 5, 2024
 
 # Modules
 import numpy as np
+import matplotlib.pyplot as plt
 import itertools as itt
 
 import cmp_tofu_xicsrt.utils as utils
@@ -34,7 +35,8 @@ def _build_omegas(
     box_cent = None, # [m], dim(3, norm, vert, binorm), ToFu basis
     box_vect = None, # [vector], list[norm, vert, binorm]
     # Controls
-    method = 'centered', # 'boxes' or 'centered'
+    #method = 'centered', # 'boxes' or 'centered'
+    method = 'crystal',
     key_ap = None,
     debug = False,
     ):
@@ -47,12 +49,17 @@ def _build_omegas(
             if op in ['crystal', 'crKr3']:
                 ind = ii
         key_ap = optics[int(ind-1)]
+        key_cry = 'crystal'
 
     # Aperture geometry
     ap_cent = utils._xicsrt2tofu(data=config['optics'][key_ap]['origin'])
     ap_norm = utils._xicsrt2tofu(data=config['optics'][key_ap]['zaxis'])
     ap_binorm = utils._xicsrt2tofu(data=config['optics'][key_ap]['xaxis'])
     ap_vert = np.cross(ap_norm, ap_binorm)
+
+    # Crystal geometry
+    cry_cent = utils._xicsrt2tofu(data=config['optics'][key_cry]['origin']) # [m]
+    cry_ysize = config['optics'][key_cry]['ysize']  # [m], crystal height
 
     # Aperture corners
     ap_tl = (
@@ -98,6 +105,39 @@ def _build_omegas(
 
         elif method == 'centered':  # If aligned with aperture
             norm_new = ap_cent - box_cent[:,ii[0], ii[1], ii[2]]
+            norm_new /= np.linalg.norm(norm_new)
+
+            # Compute rotation matrix
+            rot_mat = _rotation_matrix_from_vectors(
+                -1*box_vect[0], norm_new
+                )
+
+            # Stack the basis vectors into a matrix
+            basis = np.column_stack((-1*box_vect[0], -1*box_vect[2], box_vect[1]))
+
+            # Rotate the basis vectors
+            rotated_basis = np.dot(basis, rot_mat)
+
+            omega_norm[:,ii[0], ii[1], ii[2]] = rotated_basis[:,0]
+            omega_vert[:,ii[0], ii[1], ii[2]] = rotated_basis[:,2]
+            omega_binorm[:,ii[0], ii[1], ii[2]]  = rotated_basis[:,1]
+
+        elif method == 'crystal':  # If aligned with aperture
+            tmp = np.copy(ap_cent)
+            if cry_cent[2] > ap_cent[2]:    # Long slit, if crystal on topside
+                tmp[2] = (
+                    cry_cent[2]
+                    -cry_ysize/2    # fine positioning (bottom of crystal)
+                    )
+            elif cry_cent[2] < ap_cent[2]:    # Long slit, if crystal on bottomside
+                tmp[2] = (
+                    cry_cent[2]
+                    +cry_ysize/2    # fine positioning (bottom of crystal)
+                    )
+
+
+
+            norm_new = tmp - box_cent[:,ii[0], ii[1], ii[2]]
             norm_new /= np.linalg.norm(norm_new)
 
             # Compute rotation matrix
@@ -207,25 +247,28 @@ def _build_omegas(
                 np.sqrt(box_cent[0,:].flatten()**2+box_cent[1,:].flatten()**2), 
                 np.sqrt(ends[0,:].flatten()**2+ends[1,:].flatten()**2)
                 )),
-            np.vstack((box_cent[2,:].flatten(), ends[2,:].flatten())),
+            np.vstack((box_cent[2,:].flatten(), ends[2,:].flatten()))*100,
             'b-'
             )
 
         ax[1].plot(
             [np.sqrt(ap_tl[0]**2+ap_tl[1]**2), np.sqrt(ap_tr[0]**2+ap_tr[1]**2)],
-            [ap_tl[2], ap_tr[2]], 'k-')
+            [ap_tl[2]*100, ap_tr[2]*100], 'k-')
         ax[1].plot(
             [np.sqrt(ap_tr[0]**2+ap_tr[1]**2), np.sqrt(ap_br[0]**2+ap_br[1]**2)], 
-            [ap_tr[2], ap_br[2]], 'k-')
+            [ap_tr[2]*100, ap_br[2]*100], 'k-')
         ax[1].plot(
             [np.sqrt(ap_tl[0]**2+ap_tl[1]**2), np.sqrt(ap_bl[0]**2+ap_bl[1]**2)],
-            [ap_tl[2], ap_bl[2]], 'k-')
+            [ap_tl[2]*100, ap_bl[2]*100], 'k-')
         ax[1].plot(
             [np.sqrt(ap_bl[0]**2+ap_bl[1]**2), np.sqrt(ap_br[0]**2+ap_br[1]**2)], 
-            [ap_bl[2], ap_br[2]], 'k-')
+            [ap_bl[2]*100, ap_br[2]*100], 'k-')
 
         ax[1].set_xlabel('R [m]')
-        ax[1].set_ylabel('Z [m]')
+        ax[1].set_ylabel('Z [cm]')
+
+    import pdb
+    pdb.set_trace()
 
     # Output
     return omega_norm, omega_vert, omega_binorm, omega_dl
