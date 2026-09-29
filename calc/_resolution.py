@@ -53,9 +53,9 @@ def run_resolution(
 
     # Gets default values
     if dpt is None:
-        dpt = dp.get_dpt(option=key_diag)
+        dpt = dp.get_dpt(option=key_diag.split('_')[0])
     if dres is None:
-        dres = dp.get_dres(option=key_diag)
+        dres = dp.get_dres(option=key_diag.split('_')[0])
 
     # If user speficially wants pt to be on the magnetic axis
     # NOTE: per the midplane LOS
