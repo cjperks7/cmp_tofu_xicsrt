@@ -182,26 +182,6 @@ def _run_mono_pt_xicsrt(
     vpt /= np.linalg.norm(vpt)
     #print(vpt)
 
-    '''
-    ### Deals with long slit
-    kcry = doptics[key_cam]['optics'][1]
-    tmp = np.copy(config['optics'][kap]['origin'])
-    cry_cent = config['optics'][kcry]['origin'] # [m]
-    cry_ysize = config['optics'][kcry]['ysize']  # [m], crystal height
-    if cry_cent[1] > tmp[1]:    # Long slit, if crystal on topside
-        tmp[1] = (
-            cry_cent[1]
-            -cry_ysize/2    # fine positioning (bottom of crystal)
-            )
-    elif cry_cent[1] < tmp[1]:    # Long slit, if crystal on bottomside
-        tmp[1] = (
-            cry_cent[1]
-            +cry_ysize/2    # fine positioning (bottom of crystal)
-            )
-    vpt = tmp - pt
-    vpt /= np.linalg.norm(vpt)
-    '''
-
     # Defines the vertical and binormal directions
     if abs(vpt[1]) > 0:
         vert = [
@@ -228,18 +208,23 @@ def _run_mono_pt_xicsrt(
         config = config,
         box_cent = dpt['ToFu']['point'][:,None,None,None],
         box_vect = [
-            utils._xicsrt2tofu(vpt),
-            utils._xicsrt2tofu(vert),
+            -1*utils._xicsrt2tofu(vpt),
+            -1*utils._xicsrt2tofu(vert),
             utils._xicsrt2tofu(binorm)
             ],
+        debug = False,
         )
 
     # Source orientation
     #config['sources']['source']['zaxis'] = vpt
     #config['sources']['source']['xaxis'] = vert
     ###config['sources']['source']['xaxis'] = binorm
-    config['sources']['source']['zaxis'] = omega_norm
-    config['sources']['source']['xaxis'] = omega_vert
+    config['sources']['source']['zaxis'] = utils._tofu2xicsrt(
+        data = omega_norm[:,0,0,0]
+        )
+    config['sources']['source']['xaxis'] = utils._tofu2xicsrt(
+        data = omega_vert[:,0,0,0]
+        )
 
     dpt['XICSRT']['dOmega'] = [
         1.1*np.max(abs(omega_dl[0,:])),
