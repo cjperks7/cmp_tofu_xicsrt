@@ -177,10 +177,30 @@ def _run_mono_pt_xicsrt(
     # extract dict of optics
     doptics = coll.dobj['diagnostic'][key_diag]['doptics']
     kap = doptics[key_cam]['optics'][1:][0]
-    #vpt = config['optics']['crystal']['origin'] - pt
+    ####vpt = config['optics']['crystal']['origin'] - pt
     vpt = config['optics'][kap]['origin'] - pt
     vpt /= np.linalg.norm(vpt)
     #print(vpt)
+
+    '''
+    ### Deals with long slit
+    kcry = doptics[key_cam]['optics'][1]
+    tmp = np.copy(config['optics'][kap]['origin'])
+    cry_cent = config['optics'][kcry]['origin'] # [m]
+    cry_ysize = config['optics'][kcry]['ysize']  # [m], crystal height
+    if cry_cent[1] > tmp[1]:    # Long slit, if crystal on topside
+        tmp[1] = (
+            cry_cent[1]
+            -cry_ysize/2    # fine positioning (bottom of crystal)
+            )
+    elif cry_cent[1] < tmp[1]:    # Long slit, if crystal on bottomside
+        tmp[1] = (
+            cry_cent[1]
+            +cry_ysize/2    # fine positioning (bottom of crystal)
+            )
+    vpt = tmp - pt
+    vpt /= np.linalg.norm(vpt)
+    '''
 
     # Defines the vertical and binormal directions
     if abs(vpt[1]) > 0:
@@ -201,12 +221,10 @@ def _run_mono_pt_xicsrt(
     # Source origin
     config['sources']['source']['origin'] = pt
 
-    # Source orientation
-    config['sources']['source']['zaxis'] = vpt
-    config['sources']['source']['xaxis'] = vert
-    #config['sources']['source']['xaxis'] = binorm
-
-    _, _, _, omega_dl = setup._build_omegas(
+    (
+        omega_norm, omega_vert, omega_binorm, 
+        omega_dl 
+        )= setup._build_omegas(
         config = config,
         box_cent = dpt['ToFu']['point'][:,None,None,None],
         box_vect = [
@@ -215,6 +233,14 @@ def _run_mono_pt_xicsrt(
             utils._xicsrt2tofu(binorm)
             ],
         )
+
+    # Source orientation
+    #config['sources']['source']['zaxis'] = vpt
+    #config['sources']['source']['xaxis'] = vert
+    ###config['sources']['source']['xaxis'] = binorm
+    config['sources']['source']['zaxis'] = omega_norm
+    config['sources']['source']['xaxis'] = omega_vert
+
     dpt['XICSRT']['dOmega'] = [
         1.1*np.max(abs(omega_dl[0,:])),
         1.1*np.max(abs(omega_dl[1,:]))
