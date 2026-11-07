@@ -150,7 +150,7 @@ def _init_config(
         # Object radius
         config['optics']['crystal']['radius'] = dgeom_cryst['curve_r'][0] # [m]
 
-    elif cry_shape == 'Cylindrical':
+    elif cry_shape in ['Cylindrical', 'focused von Hamos']:
         print('Cylindrical, 2')
         # Object type
         config['optics']['crystal']['class_name'] = 'XicsrtOpticCylindricalCrystal'
@@ -363,6 +363,24 @@ def _init_config(
                 sconf['crystal']['lapex']
                 * saxis
                 )
+            )
+
+    ### Extra data for focused von Hamos
+    elif cry_shape == 'focused von Hamos':
+        # Bragg angle
+        ttB = 24.2  # [deg]
+        # Aperture-to-crystal distance
+        lap = 4.732 # [m]
+
+        # Changes crystal radius of curvature to focus with aperture position
+        config['optics']['crystal']['radius'] = (
+            lap * np.sin(ttB*np.pi/180)
+            )    # [m]
+
+        # Changes detector posiition to in focus
+        config['optics']['detector']['origin'] = (
+            config['optics']['crystal']['origin']
+            - lap*config['optics']['detector']['zaxis']
             )
 
     # Output geometry
